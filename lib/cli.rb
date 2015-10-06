@@ -43,6 +43,9 @@ module Cli
       opts.on("-c", "--consul", "Address to consul agent") { |c|
         options[:consul] = c
       }
+      opts.on("-p", "--prefix", "Consul config key prefix") { |p|
+        options[:prefix] = p
+      }
     end
   end
 end

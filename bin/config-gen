@@ -31,5 +31,7 @@ Generate::generate(
   options[:template],
   input: options[:input],
   output: options[:output],
-  context: options[:context]
+  data: options[:data],
+  consul: options[:consul],
+  prefix: options[:prefix]
 )
