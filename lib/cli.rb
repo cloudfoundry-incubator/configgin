@@ -7,8 +7,12 @@ module Cli
   #
   # @param options [Hash] The options to check
   def self.check_opts(options)
-    if !options[:input].nil? && !options[:context].nil?
-      raise ArgConflictError, '--input and --context are mutually exclusive arguments'
+    if !options[:input].nil? && !options[:data].nil?
+      raise ArgConflictError, '--input and --data are mutually exclusive arguments'
+    end
+
+    if options[:input].nil? && options[:data].nil?
+      raise ArgMissingError, 'input or data'
     end
 
     if options[:template].nil? || options[:template].empty?
