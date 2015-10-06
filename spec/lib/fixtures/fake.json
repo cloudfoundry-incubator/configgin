@@ -1,0 +1,10 @@
+{
+  "properties": {
+    "nats": {
+      "machines": ["localhost", "127.0.0.1"]
+    },
+    "cloud_controller": {
+      "base_dir": "directory"
+    }
+  }
+}

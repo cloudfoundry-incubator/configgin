@@ -1,0 +1,116 @@
+---
+# static_values are keys for which we have no corresponding kato config key
+# for. They are required to render the templates and so we provide static
+# values for them here.
+# These default values conflict with the mappings section below. It is an error
+# if a given key is in both sections.
+static_values:
+  disk_quota_enabled: true
+  dea_next.allow_host_access: false
+  dea_next.allow_networks:
+    # To be fixed in HCF-67
+    - "0.0.0.0/0"
+  dea_next.disk_overcommit_factor: 1
+  dea_next.mtu: 1454
+  dea_next.rlimit_core: 0
+  doppler.status.user: ""
+  doppler.status.password: ""
+  doppler.status.port: 0
+  doppler.unmarshaller_count: 5
+  doppler.sink_dial_timeout_seconds: 1
+  doppler.sink_io_timeout_seconds: 0
+  etcd.maxconcurrentrequests: 5
+  metron_agent.status.user: ""
+  metron_agent.status.password: ""
+  metron_agent.status.port: 0
+  metron_endpoint.host: "localhost"
+  nats.port: 4222
+  nats.password: ""
+  nats.user: ""
+  router.requested_route_registration_interval_in_seconds: 300
+  ssl.skip_cert_verify: 'true'
+  traffic_controller.status.password: ""
+  traffic_controller.status.port: 0
+  traffic_controller.status.user: ""
+  uaa.no_ssl: ''
+  # All collector_registrar_interval_milliseconds should be the same
+  traffic_controller.collector_registrar_interval_milliseconds: 5000
+  doppler.collector_registrar_interval_milliseconds: 5000
+  metron_agent.collector_registrar_interval_milliseconds: 5000
+  metron_agent.deployment: ""
+
+# These values are available by using the key-names in the erb templates.
+mappings:
+  cc.srv_api_uri: "cluster/endpoint" # Special case, this needs http:// added to it, done in code
+  cc.bulk_api_user: "cloud_controller_ng/bulk_api/auth_user"
+  cc.bulk_api_password: "cloud_controller_ng/bulk_api/auth_password"
+
+  dea_next.advertise_interval_in_seconds: dea_ng/intervals/advertise
+  dea_next.crash_lifetime_secs: dea_ng/crash_lifetime_secs
+  dea_next.default_health_check_timeout: dea_ng/default_health_check_timeout
+  dea_next.directory_server_protocol: dea_ng/directory_server/protocol
+  dea_next.directory_server.v1_port: dea_ng/directory_server_warden/v1_port
+  dea_next.directory_server.v2_port: dea_ng/directory_server_warden/v2_port
+  dea_next.directory_server.file_api_port: dea_ng/directory_server_warden/file_api_port
+  dea_next.evacuation_bail_out_time_in_seconds: dea_ng/evacuation_bail_out_time_in_seconds
+  dea_next.heartbeat_interval_in_seconds: dea_ng/intervals/heartbeat
+  dea_next.logging_level: dea_ng/logging/level
+  dea_next.streaming_timeout: dea_ng/directory_server/streaming_timeout
+  # memory_mb may be "auto", in which case config-gen handles specially
+  dea_next.memory_mb: dea_ng/resources/memory_mb
+  dea_next.memory_overcommit_factor: dea_ng/resources/memory_max_percent
+  dea_next.disk_mb: dea_ng/resources/disk_mb
+  dea_next.max_staging_duration: dea_ng/staging/max_staging_duration
+  dea_next.staging_memory_limit_mb: dea_ng/staging/memory_limit_mb
+  dea_next.staging_disk_limit_mb: dea_ng/staging/disk_limit_mb
+  dea_next.staging_cpu_limit_shares: dea_ng/staging/cpu_limit_shares
+  dea_next.staging_disk_inode_limit: dea_ng/staging/disk_inode_limit
+  dea_next.instance_memory_to_cpu_share_ratio: dea_ng/instance/memory_to_cpu_share_ratio
+  dea_next.instance_min_cpu_share_limit: dea_ng/instance/min_cpu_share_limit
+  dea_next.instance_max_cpu_share_limit: dea_ng/instance/max_cpu_share_limit
+  dea_next.instance_disk_inode_limit: dea_ng/instance/disk_inode_limit
+  dea_next.zone: dea_ng/placement_properties/zone
+
+  domain: cloud_controller_ng/system_domain
+
+  loggregator_endpoint.shared_secret: "trafficcontroller/shared_secret"
+  loggregator.doppler_port: "doppler/outgoing_port"
+  loggregator.outgoing_dropsonde_port: "trafficcontroller/outgoing_dropsonde_port"
+  loggregator.incoming_port: "doppler/incoming_port"
+  loggregator.dropsonde_incoming_port: "doppler/dropsonde_incoming_port"
+
+  doppler.uaa_client_id: "doppler/uaa_client_id"
+  doppler.incoming_port: "doppler/incoming_port"
+  doppler.dropsonde_incoming_port: "doppler/dropsonde_incoming_port"
+  doppler.outgoing_port: "doppler/outgoing_port"
+  doppler.zone: "doppler/zone"
+  doppler.maxRetainedLogMessages: "doppler/max_retained_log_messages"
+  doppler_endpoint.shared_secret: "doppler/shared_secret"
+  doppler.container_metric_ttl_seconds: "doppler/container_metric_ttl_seconds"
+  doppler.sink_inactivity_timeout_seconds: "doppler/sink_inactivity_timeout_seconds"
+  doppler.message_drain_buffer_size: "doppler/message_drain_buffer_size"
+  metron_agent.incoming_port: "metron/incoming_messages_port"
+  metron_agent.dropsonde_incoming_port: "metron/dropsonde_incoming_messages_port"
+  metron_agent.statsd_incoming_port: "metron/statsd_incoming_port"
+  metron_agent.etcd_query_interval_milliseconds: "metron/etcd_query_interval_milliseconds"
+  metron_agent.zone: "metron/zone"
+  metron_endpoint.dropsonde_port: "metron/dropsonde_incoming_messages_port"
+  metron_endpoint.shared_secret: "metron/shared_secret"
+
+  traffic_controller.host: "trafficcontroller/host"
+  traffic_controller.incoming_port: "trafficcontroller/incoming_port"
+  traffic_controller.outgoing_port: "trafficcontroller/outgoing_port"
+  traffic_controller.zone: "trafficcontroller/zone"
+
+  syslog_drain_binder.drain_url_ttl_seconds: "syslog_drain_binder/drain_url_ttl_seconds"
+  syslog_drain_binder.polling_batch_size: "syslog_drain_binder/polling_batch_size"
+  syslog_drain_binder.update_interval_seconds: "syslog_drain_binder/update_interval_seconds"
+
+  uaa.clients.doppler.secret: "doppler/uaa_client_secret"
+  uaa.url: "cloud_controller_ng/uaa/url"
+
+  system_domain: "cloud_controller_ng/system_domain"
+
+  # nodes/ uses Kato::Cluster::Manager.node_ids_for_process('process_name')
+  nats.machines: "nodes/gnatsd"
+  etcd.machines: "nodes/etcd"

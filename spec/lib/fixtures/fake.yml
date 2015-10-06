@@ -1,0 +1,6 @@
+---
+nats_machines:
+  - nats://localhost
+  - nats://127.0.0.1
+
+base_dir: directory
