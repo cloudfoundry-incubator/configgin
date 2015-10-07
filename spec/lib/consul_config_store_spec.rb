@@ -13,9 +13,9 @@ describe ConsulConfigStore do
   end
 
   it 'should get values from consul' do
-    expect(Diplomat::Kv).to receive(:get).with('/prefix/role/cc_role/cc/port')
+    expect(Diplomat::Kv).to receive(:get).with('/prefix/role/cc_role/cc/port').and_return('80')
 
-    @config_store.get('cc.port')
+    expect(@config_store.get('cc.port')).to eq(80)
   end
 
   it 'should use fallbacks to find the correct defaults' do

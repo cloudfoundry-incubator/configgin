@@ -1,4 +1,5 @@
 require 'diplomat'
+require 'yaml'
 
 # ConsulConfigStore uses consul to look up values.
 class ConsulConfigStore
@@ -45,7 +46,7 @@ class ConsulConfigStore
     value = nil
     lookup_order.each do |key_lookup|
       begin
-        value = Diplomat::Kv.get(key_lookup)
+        value = YAML.load(Diplomat::Kv.get(key_lookup))
         break
       rescue Diplomat::KeyNotFound
         value = nil
