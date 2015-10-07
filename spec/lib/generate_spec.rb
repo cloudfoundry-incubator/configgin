@@ -12,7 +12,7 @@ describe Generate do
 
     it "should generate the templates from filenames" do
       begin
-        file = Tempfile.new('config_gen_output.txt')
+        file = Tempfile.new('configgin_output.txt')
         file.close()
 
         Generate::generate(output: file.path, input: input_filename) do |output, input|

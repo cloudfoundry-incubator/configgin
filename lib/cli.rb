@@ -27,7 +27,7 @@ module Cli
   # @param options [Hash] The hash that the options will be bound to on parse!
   def self.make_option_parser(options)
     return OptionParser.new do |opts|
-      opts.banner = "Usage: config-gen [options] <template>"
+      opts.banner = "Usage: configgin [options] <template>"
 
       opts.on("-d", "--data data", "Input from command line") { |d|
         options[:data] = d
