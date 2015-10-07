@@ -9,7 +9,7 @@ class EvaluationContext < Bosh::Template::EvaluationContext
   #
   # @param data         [String] The data with which to look up values
   #                              before defaulting to the config_store.
-  # @param config_store [Object] Anything that responds to .get(component, key)
+  # @param config_store [Object] Anything that responds to .get(key)
   #                              for retrieving config values.
   def initialize(data, config_store)
     super(data)
@@ -19,19 +19,19 @@ class EvaluationContext < Bosh::Template::EvaluationContext
   # Look up 'name' property in the collection
   #
   # @param collection [Hash]   The collection to look up against
-  # @param name       [String] Dot-separated property name
-  def lookup_property(collection, name)
-    keys = name.split(".")
+  # @param key        [String] Dot-separated property key name.
+  def lookup_property(collection, key)
+    keys = key.split(".")
     ref = collection
 
     # Check in the data data to see if it's present and return it if it is
-    keys.each do |key|
-      ref = ref[key]
+    keys.each do |fragment|
+      ref = ref[fragment]
       break if ref.nil?
     end
 
     return ref unless ref.nil?
 
-    return @config_store.get(component, key)
+    return @config_store.get(key)
   end
 end

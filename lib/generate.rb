@@ -1,25 +1,24 @@
 require 'bosh/template/renderer'
-#require 'evaluation_context'
-#require 'kato_configurator'
+require 'evaluation_context'
 require 'json'
 
 module Generate
   # Generate the given template using input filename and output filename
   # if given, defaulting to STDIN and STDOUT respectively if not given.
-  # If given the context parameter, input is overridden by the contents of
+  # If given the data parameter, input is overridden by the contents of
   # the string.
   #
   # @param template [String] The template filepath
-  # @param context  [String] The input as a string (overrides input param)
+  # @param data  [String] The input as a string (overrides input param)
   # @param input    [String] The input filepath (or nil for stdin)
   # @param output   [String] The output filepath (or nil for stdout)
   # @return [Bool] success?
-  def self.generate(template, context: nil, input: nil, output: nil)
+  def self.generate(template, data: nil, input: nil, output: nil, prefix: 'hcf')
     in_file = STDIN
     out_file = STDOUT
 
-    if !context.nil?
-      in_file = StringIO.new(context)
+    if !data.nil?
+      in_file = StringIO.new(data)
     elsif !input.nil?
       begin
         in_file = File.open(input, "r")
@@ -54,9 +53,9 @@ module Generate
   # @param input    [IO]     The input stream
   # @param template [String] The template filepath
   def self.render(out_file, in_file, template, configurator = nil)
-    context = in_file.read
+    data = in_file.read
 
-    spec = JSON.parse(context)
+    spec = JSON.parse(data)
     evaluation_context = EvaluationContext.new(spec, configurator)
 
     begin

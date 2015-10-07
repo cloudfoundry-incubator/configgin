@@ -22,10 +22,9 @@ describe Generate do
       ensure
         file.unlink unless file.nil?
       end
-
     end
 
-    it "should render the templates with a context" do
+    it "should render the templates with data" do
       # output into string io and compare with expect_filename
       output_buffer = StringIO.new()
       File.open(input_filename) do |input_file|

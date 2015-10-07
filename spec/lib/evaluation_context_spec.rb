@@ -14,7 +14,7 @@ describe EvaluationContext do
     config_store = double("config_store")
     expect_value = 5
     expect(config_store).to receive(:get)
-      .with('fake', 'othervalue')
+      .with('fake.othervalue')
       .and_return(expect_value)
 
     context = EvaluationContext.new(properties, config_store)
