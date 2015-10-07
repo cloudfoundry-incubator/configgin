@@ -15,7 +15,7 @@ module Cli
       raise ArgMissingError, 'input or data'
     end
 
-    [:template, :consul, :job, :role].each { |key|
+    [:template, :consul, :prefix, :job, :role].each { |key|
       if options[key].nil? || options[key].empty?
         raise ArgMissingError, key.to_s
       end
@@ -41,13 +41,13 @@ module Cli
       opts.on("-c", "--consul", "Address to consul agent") { |c|
         options[:consul] = c
       }
-      opts.on("-p", "--prefix", "Consul config key prefix") { |p|
+      opts.on("-p", "--prefix name", "Consul config key prefix") { |p|
         options[:prefix] = p
       }
-      opts.on('-j', '--job', 'Job name') { |j|
+      opts.on('-j', '--job name', 'Job name') { |j|
         options[:job] = j
       }
-      opts.on('-r', '--role', 'Role name') { |r|
+      opts.on('-r', '--role name', 'Role name') { |r|
         options[:role] = r
       }
     end

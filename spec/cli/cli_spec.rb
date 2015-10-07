@@ -16,7 +16,7 @@ describe Cli do
 
   context "with a full config" do
     let(:config) {
-      {consul: "consul", data: "data", template: "template", job: "job", role: "role"}
+      {consul: "consul", data: "data", template: "template", job: "job", role: "role", prefix: "prefix"}
     }
 
     it "should accept correct arrangements of arguments" do
@@ -45,6 +45,13 @@ describe Cli do
       expect {
         Cli::check_opts(config)
       }.to raise_error(ArgMissingError, 'consul')
+    end
+
+    it "should fail if job is prefix" do
+      config.delete(:prefix)
+      expect {
+        Cli::check_opts(config)
+      }.to raise_error(ArgMissingError, 'prefix')
     end
 
     it "should fail if job is missing" do
