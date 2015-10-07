@@ -9,11 +9,11 @@ module Generate
   # the string.
   #
   # @param template [String] The template filepath
-  # @param data  [String] The input as a string (overrides input param)
-  # @param input    [String] The input filepath (or nil for stdin)
+  # @param data     [String] The input as a string (overrides input param)
   # @param output   [String] The output filepath (or nil for stdout)
-  # @return [Bool] success?
-  def self.generate(template, data: nil, input: nil, output: nil, prefix: 'hcf')
+  # @param input    [String] The input filepath (or nil for stdin)
+  # @param block    [Block]  The block to pass the streams to (out_stream, in_stream)
+  def self.generate(data: nil, output: nil, input: nil, &block)
     in_file = STDIN
     out_file = STDOUT
 
@@ -25,7 +25,7 @@ module Generate
       rescue Errno::ENOENT => e
         in_file = nil
         STDERR.puts("failed to open input file #{input}: #{e}")
-        return false
+        return
       end
     end
 
@@ -35,12 +35,11 @@ module Generate
       rescue Errno::ENOENT, Errno::EACCES => e
         out_file = nil
         STDERR.puts("failed to open output file #{output}: #{e}")
-        return false
+        return
       end
     end
 
-    Generate::render out_file, in_file, template
-    return true
+    yield out_file, in_file
   ensure
     in_file.close if !in_file.nil? && !input.nil?
     out_file.close if !out_file.nil? && !output.nil?
@@ -49,14 +48,14 @@ module Generate
   # Render the given template using input filename and output filename
   # if given, defaulting to STDIN and STDOUT respectively if not given.
   #
-  # @param output   [IO]     The output stream
-  # @param input    [IO]     The input stream
-  # @param template [String] The template filepath
-  def self.render(out_file, in_file, template, configurator = nil)
+  # @param output       [IO]     The output stream
+  # @param input        [IO]     The input stream
+  # @param template     [String] The template filepath
+  # @param config_store [Object] A configuration store (anything that responds to get(key)
+  def self.render(out_file, in_file, template, config_store)
     data = in_file.read
-
     spec = JSON.parse(data)
-    evaluation_context = EvaluationContext.new(spec, configurator)
+    evaluation_context = EvaluationContext.new(spec, config_store)
 
     begin
       template = ERB.new(File.read(template))

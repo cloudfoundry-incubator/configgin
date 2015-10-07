@@ -15,7 +15,9 @@ describe Generate do
         file = Tempfile.new('config_gen_output.txt')
         file.close()
 
-        Generate::generate(template_filename, input: input_filename, output: file.path)
+        Generate::generate(output: file.path, input: input_filename) do |output, input|
+          Generate::render(output, input, template_filename, nil)
+        end
 
         output = YAML.load_file(file.path)
         expect(output).to eq(YAML.load(expect_output))
@@ -28,7 +30,7 @@ describe Generate do
       # output into string io and compare with expect_filename
       output_buffer = StringIO.new()
       File.open(input_filename) do |input_file|
-        Generate::render(output_buffer, input_file, template_filename)
+        Generate::render(output_buffer, input_file, template_filename, nil)
       end
 
       expect(output_buffer.string).to eq(expect_output)
