@@ -1,5 +1,6 @@
 require 'diplomat'
 
+# ConsulConfigStore uses consul to look up values.
 class ConsulConfigStore
   # Initialize a new consul config store using address
   #
@@ -12,7 +13,7 @@ class ConsulConfigStore
     @job = job
     @role = role
 
-    Diplomat::configure do |config|
+    Diplomat.configure do |config|
       config.url = consul_address
     end
   end
@@ -42,7 +43,7 @@ class ConsulConfigStore
     )
 
     value = nil
-    lookup_order.each { |key_lookup|
+    lookup_order.each do |key_lookup|
       begin
         value = Diplomat::Kv.get(key_lookup)
         break
@@ -50,8 +51,8 @@ class ConsulConfigStore
         value = nil
         next
       end
-    }
+    end
 
-    return value
+    value
   end
 end

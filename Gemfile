@@ -1,4 +1,4 @@
-source (ENV['RUBYGEMS_MIRROR'] or 'https://rubygems.org')
+source 'https://rubygems.org'
 
 # prevents hard-to-diagnose errors with bundle install
 ruby '2.1.6'

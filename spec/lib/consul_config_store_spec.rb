@@ -12,13 +12,13 @@ describe ConsulConfigStore do
     @config_store = ConsulConfigStore.new(@address, @prefix, @job, @role)
   end
 
-  it "should get values from consul" do
+  it 'should get values from consul' do
     expect(Diplomat::Kv).to receive(:get).with('/prefix/role/cc_role/cc/port')
 
     @config_store.get('cc.port')
   end
 
-  it "should use fallbacks to find the correct defaults" do
+  it 'should use fallbacks to find the correct defaults' do
     expect(Diplomat::Kv).to receive(:get)
       .with('/prefix/role/cc_role/cc/port')
       .and_raise(Diplomat::KeyNotFound)

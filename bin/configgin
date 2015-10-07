@@ -12,13 +12,13 @@ require 'cli'
 require 'generate'
 
 options = {}
-parser = Cli::make_option_parser(options)
+parser = Cli.make_option_parser(options)
 
 parser.parse!(ARGV)
 options[:template] = ARGV.last
 
 begin
-  Cli::check_opts(options)
+  Cli.check_opts(options)
 rescue ArgConflictError => e
   STDERR.puts("invalid arguments: #{e}")
   exit(1)
@@ -29,6 +29,6 @@ end
 
 config_store = ConsulConfigStore.new(options[:consul], options[:prefix], options[:job], options[:role])
 
-Generate::generate(output: options[:output], input: options[:input], data: options[:data]) do
-  Generate::render(output, input, options[:template], config_store)
+Generate.generate(output: options[:output], input: options[:input], data: options[:data]) do
+  Generate.render(output, input, options[:template], config_store)
 end

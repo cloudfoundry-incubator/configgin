@@ -2,6 +2,8 @@ require 'bosh/template/renderer'
 require 'evaluation_context'
 require 'json'
 
+# Generate has methods for manipulating streams and generating configuration
+# files using those streams.
 module Generate
   # Generate the given template using input filename and output filename
   # if given, defaulting to STDIN and STDOUT respectively if not given.
@@ -13,7 +15,7 @@ module Generate
   # @param output   [String] The output filepath (or nil for stdout)
   # @param input    [String] The input filepath (or nil for stdin)
   # @param block    [Block]  The block to pass the streams to (out_stream, in_stream)
-  def self.generate(data: nil, output: nil, input: nil, &block)
+  def self.generate(data: nil, output: nil, input: nil, &_block)
     in_file = STDIN
     out_file = STDOUT
 
@@ -21,7 +23,7 @@ module Generate
       in_file = StringIO.new(data)
     elsif !input.nil?
       begin
-        in_file = File.open(input, "r")
+        in_file = File.open(input, 'r')
       rescue Errno::ENOENT => e
         in_file = nil
         STDERR.puts("failed to open input file #{input}: #{e}")
@@ -31,7 +33,7 @@ module Generate
 
     unless output.nil?
       begin
-        out_file = File.open(output, "w")
+        out_file = File.open(output, 'w')
       rescue Errno::ENOENT, Errno::EACCES => e
         out_file = nil
         STDERR.puts("failed to open output file #{output}: #{e}")

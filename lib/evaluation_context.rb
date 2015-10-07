@@ -21,7 +21,7 @@ class EvaluationContext < Bosh::Template::EvaluationContext
   # @param collection [Hash]   The collection to look up against
   # @param key        [String] Dot-separated property key name.
   def lookup_property(collection, key)
-    keys = key.split(".")
+    keys = key.split('.')
     ref = collection
 
     # Check in the data data to see if it's present and return it if it is
@@ -32,6 +32,6 @@ class EvaluationContext < Bosh::Template::EvaluationContext
 
     return ref unless ref.nil?
 
-    return @config_store.get(key)
+    @config_store.get(key)
   end
 end
