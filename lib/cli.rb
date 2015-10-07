@@ -15,13 +15,11 @@ module Cli
       raise ArgMissingError, 'input or data'
     end
 
-    if options[:template].nil? || options[:template].empty?
-      raise ArgMissingError, 'template'
-    end
-
-    if options[:consul].nil? || options[:consul].empty?
-      raise ArgMissingError, 'consul'
-    end
+    [:template, :consul, :job, :role].each { |key|
+      if options[key].nil? || options[key].empty?
+        raise ArgMissingError, key.to_s
+      end
+    }
   end
 
   # Make an option parser bound to the hash passed in.
@@ -45,6 +43,12 @@ module Cli
       }
       opts.on("-p", "--prefix", "Consul config key prefix") { |p|
         options[:prefix] = p
+      }
+      opts.on('-j', '--job', 'Job name') { |j|
+        options[:job] = j
+      }
+      opts.on('-r', '--role', 'Role name') { |r|
+        options[:role] = r
       }
     end
   end
