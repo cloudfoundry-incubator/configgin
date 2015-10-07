@@ -54,3 +54,5 @@ BUNDLE_WITHOUT: development
 BUNDLE_DISABLE_SHARED_GEMS: '1'
 EOL
 
+tar -czf ./output/${app_name}.tar.gz ./output/${app_name}
+
