@@ -10,7 +10,7 @@ app_name="configgin-${CONFIGGIN_VERSION}-linux-x86_64"
 traveling_ruby="traveling-ruby-20141215-2.1.5-linux-x86_64.tar.gz"
 
 mkdir -p ./output/${app_name}/lib/app
-rsync -a --exclude output --exclude .git ./ ./output/${app_name}/lib/app
+rsync -a --exclude output --exclude .git --exclude .gitignore  ./ ./output/${app_name}/lib/app
 
 mkdir -p ./output/packaging
 
