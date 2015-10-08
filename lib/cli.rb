@@ -40,7 +40,7 @@ module Cli
       opts.on('-o', '--output file', 'Output to file') do |o|
         options[:output] = o
       end
-      opts.on('-c', '--consul', 'Address to consul agent') do |c|
+      opts.on('-c', '--consul address', 'Address to consul agent') do |c|
         options[:consul] = c
       end
       opts.on('-p', '--prefix name', 'Consul config key prefix') do |p|
