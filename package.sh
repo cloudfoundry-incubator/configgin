@@ -10,7 +10,7 @@ app_name="configgin-${CONFIGGIN_VERSION}-linux-x86_64"
 traveling_ruby="traveling-ruby-20141215-2.1.5-linux-x86_64.tar.gz"
 
 mkdir -p ./output/${app_name}/lib/app
-rsync -a ./ ./output/${app_name}/lib/app --exclude ./output
+rsync -a --exclude output --exclude .git ./ ./output/${app_name}/lib/app
 
 mkdir -p ./output/packaging
 
@@ -18,7 +18,7 @@ mkdir -p ./output/packaging
 	cd ./output
 	(
 		cd ./packaging
-		curl -L -O --fail http://d6r77u77i8pq3.cloudfront.net/releases/${traveling_ruby}
+		curl -sS -L -O --fail http://d6r77u77i8pq3.cloudfront.net/releases/${traveling_ruby}
 	)
 	mkdir -p ${app_name}/lib/ruby
 	tar -xzf packaging/${traveling_ruby} -C ${app_name}/lib/ruby
@@ -37,7 +37,7 @@ export BUNDLE_GEMFILE="$SELFDIR/lib/vendor/Gemfile"
 unset BUNDLE_IGNORE_CONFIG
 
 # Run the actual app using the bundled Ruby interpreter.
-exec "$SELFDIR/lib/ruby/bin/ruby" -rbundler/setup "$SELFDIR/lib/app/bin/config-gen"
+exec "$SELFDIR/lib/ruby/bin/ruby" -rbundler/setup "$SELFDIR/lib/app/bin/configgin"
 EOL
 
 chmod +x ./output/${app_name}/configgin
@@ -59,6 +59,8 @@ BUNDLE_WITHOUT: development
 BUNDLE_DISABLE_SHARED_GEMS: '1'
 EOL
 
-tar -czf ./output/${app_name}.tar.gz ./output/${app_name}
-
+(
+	cd ./output/${app_name}
+	tar -zcf ../${app_name}.tgz .
+)
 # vim: set ts=2:
