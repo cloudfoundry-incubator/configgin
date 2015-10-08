@@ -10,6 +10,7 @@ $LOAD_PATH.unshift(File.join(ROOT_DIR, 'lib'))
 
 require 'cli'
 require 'generate'
+require 'consul_config_store'
 
 options = {}
 parser = Cli.make_option_parser(options)
@@ -29,6 +30,6 @@ end
 
 config_store = ConsulConfigStore.new(options[:consul], options[:prefix], options[:job], options[:role])
 
-Generate.generate(output: options[:output], input: options[:input], data: options[:data]) do
+Generate.generate(output: options[:output], input: options[:input], data: options[:data]) do |output, input|
   Generate.render(output, input, options[:template], config_store)
 end
