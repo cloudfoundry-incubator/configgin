@@ -10,7 +10,6 @@ module Generate
   # If given the data parameter, input is overridden by the contents of
   # the string.
   #
-  # @param template [String] The template filepath
   # @param data     [String] The input as a string (overrides input param)
   # @param output   [String] The output filepath (or nil for stdout)
   # @param input    [String] The input filepath (or nil for stdin)

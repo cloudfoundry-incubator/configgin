@@ -47,7 +47,7 @@ describe Cli do
       }.to raise_error(ArgMissingError, 'consul')
     end
 
-    it 'should fail if job is prefix' do
+    it 'should fail if prefix is missing' do
       config.delete(:prefix)
       expect {
         Cli.check_opts(config)
