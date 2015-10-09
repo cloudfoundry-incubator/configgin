@@ -32,6 +32,8 @@ module Generate
 
     unless output.nil?
       begin
+        output_dir = File.dirname(output)
+        FileUtils.mkdir_p(output_dir) unless Dir.exists?(output_dir)
         out_file = File.open(output, 'w')
       rescue Errno::ENOENT, Errno::EACCES => e
         out_file = nil

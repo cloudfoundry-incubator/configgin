@@ -35,5 +35,19 @@ describe Generate do
 
       expect(output_buffer.string).to eq(expect_output)
     end
+
+    it 'should create directories for output paths' do
+      Dir.mktmpdir('configgin_mkdir_p_test') do |dir|
+        output_file = File.join(dir, "adirectory", "test.yml")
+        Generate.generate(output: output_file, input: input_filename) do |output, input|
+          Generate.render(output, input, template_filename, nil)
+        end
+
+        output = YAML.load_file(output_file)
+        expect(output).to eq(YAML.load(expect_output))
+
+        expect(Dir.exist?(File.dirname(output_file))).to be true
+      end
+    end
   end
 end
