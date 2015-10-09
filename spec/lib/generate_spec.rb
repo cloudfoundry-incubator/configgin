@@ -32,6 +32,8 @@ describe Generate do
         file = Tempfile.new('configgin_output.txt')
         file.close
 
+        File.chmod(0600, restricted_template_filename)
+
         Generate.generate(output: file.path, input: input_filename) do |output, input|
           Generate.render(output, input, restricted_template_filename, nil)
         end
