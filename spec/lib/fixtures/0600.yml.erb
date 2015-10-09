@@ -1,0 +1,5 @@
+---
+nats_machines:
+<% p("nats.machines").each do |address| %>  - nats://<%= address %>
+<% end %>
+base_dir: <%= p("cloud_controller.base_dir") %>
