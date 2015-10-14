@@ -47,6 +47,7 @@ class ConsulConfigStore
     lookup_order.each do |key_lookup|
       begin
         value = YAML.load(Diplomat::Kv.get(key_lookup))
+        value = EvaluationContext.make_open_struct(value, self)
         break
       rescue Diplomat::KeyNotFound
         value = nil
