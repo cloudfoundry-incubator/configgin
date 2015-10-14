@@ -61,16 +61,15 @@ module Generate
     evaluation_context = EvaluationContext.new(spec, config_store)
 
     begin
-      filename = template
       perms = File.stat(template).mode
-      template = ERB.new(File.read(template))
-      template.filename = filename
+      erb_template = ERB.new(File.read(template))
+      erb_template.filename = template
     rescue Errno::ENOENT
       STDERR.puts("failed to read template file: #{template}")
       return
     end
 
-    output = template.result(evaluation_context.get_binding)
+    output = erb_template.result(evaluation_context.get_binding)
 
     out_file.write(output)
 
