@@ -1,4 +1,5 @@
 require 'bosh/template/evaluation_context'
+require 'ostruct_config_store'
 require 'yaml'
 
 # EvaluationContext looks up values in a hybrid bosh-template way but also
@@ -12,11 +13,12 @@ class EvaluationContext < Bosh::Template::EvaluationContext
   # @param config_store [Object] Anything that responds to .get(key)
   #                              for retrieving config values.
   def initialize(data, config_store)
-    super(data)
     @config_store = config_store
+    super(data)
   end
 
   # Look up 'name' property in the collection
+  # Overrides Bosh::Template::EvaluationContext.lookup_property (from include Bosh::Template::PropertyHelper)
   #
   # @param collection [Hash]   The collection to look up against
   # @param key        [String] Dot-separated property key name.
@@ -33,5 +35,25 @@ class EvaluationContext < Bosh::Template::EvaluationContext
     return ref unless ref.nil?
 
     @config_store.get(key)
+  end
+
+  # Creates a nested OpenStructConfigStore representation of the hash.
+  # Overrides Bosh::Template::EvaluationContext.openstruct
+  #
+  # @param object [Object] A hash, array or something else.
+  # @return       [OpenStructConfigStore] An object that behaves like OpenStruct.
+  def openstruct(object)
+    case object
+    when Hash
+      mapped = object.inject({}) { |h, (k, v)|
+        h[k] = openstruct(v)
+        h
+      }
+      OpenStructConfigStore.new(mapped, config_store: @config_store)
+    when Array
+      object.map { |item| openstruct(item) }
+    else
+      object
+    end
   end
 end
