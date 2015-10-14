@@ -33,7 +33,7 @@ module Generate
     unless output.nil?
       begin
         output_dir = File.dirname(output)
-        FileUtils.mkdir_p(output_dir) unless Dir.exists?(output_dir)
+        FileUtils.mkdir_p(output_dir)
         out_file = File.open(output, 'w')
       rescue Errno::ENOENT, Errno::EACCES => e
         out_file = nil
@@ -74,9 +74,6 @@ module Generate
 
     out_file.write(output)
 
-    if out_file.kind_of?(File)
-      out_file.chmod(perms)
-    end
-
+    out_file.chmod(perms) if out_file.is_a?(File)
   end
 end

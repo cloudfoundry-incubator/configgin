@@ -39,7 +39,7 @@ describe Generate do
           Generate.render(output, input, restricted_template_filename, nil)
         end
 
-        expect("%o" % File.stat(file.path).mode).to eq('100600')
+        expect(format('%o', File.stat(file.path).mode)).to eq('100600')
       ensure
         file.unlink unless file.nil?
       end
@@ -62,12 +62,12 @@ describe Generate do
         Generate.render(output_buffer, input_file, know_filename_template_filename, nil)
       end
 
-      expect(output_buffer.string).to eq(know_filename_template_filename+"\n")
+      expect(output_buffer.string).to eq(know_filename_template_filename + "\n")
     end
 
     it 'should create directories for output paths' do
       Dir.mktmpdir('configgin_mkdir_p_test') do |dir|
-        output_file = File.join(dir, "adirectory", "test.yml")
+        output_file = File.join(dir, 'adirectory', 'test.yml')
         Generate.generate(output: output_file, input: input_filename) do |output, input|
           Generate.render(output, input, template_filename, nil)
         end
