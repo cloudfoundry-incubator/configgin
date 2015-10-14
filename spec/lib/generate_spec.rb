@@ -62,7 +62,7 @@ describe Generate do
         Generate.render(output_buffer, input_file, know_filename_template_filename, nil)
       end
 
-      expect(output_buffer.string).to eq know_filename_template_filename
+      expect(output_buffer.string).to eq(know_filename_template_filename+"\n")
     end
 
     it 'should create directories for output paths' do
