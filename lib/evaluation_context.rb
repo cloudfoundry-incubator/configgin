@@ -18,7 +18,8 @@ class EvaluationContext < Bosh::Template::EvaluationContext
   end
 
   # Look up 'name' property in the collection
-  # Overrides Bosh::Template::EvaluationContext.lookup_property (from include Bosh::Template::PropertyHelper)
+  # Overrides Bosh::Template::EvaluationContext.lookup_property
+  # (from include Bosh::Template::PropertyHelper)
   #
   # @param collection [Hash]   The collection to look up against
   # @param key        [String] Dot-separated property key name.
@@ -40,7 +41,7 @@ class EvaluationContext < Bosh::Template::EvaluationContext
   # openstruct is a helper that calls make_open_struct
   # cannot be removed because inside initialize() super(data) calls this.
   def openstruct(object)
-    EvaluationContext::make_open_struct(object, @config_store)
+    EvaluationContext.make_open_struct(object, @config_store)
   end
 
   # Creates a nested OpenStructConfigStore representation of the hash.
