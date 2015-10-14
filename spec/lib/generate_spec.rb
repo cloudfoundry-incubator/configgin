@@ -6,6 +6,7 @@ require 'tempfile'
 describe Generate do
   context 'with some file paths' do
     template_filename = File.join(File.dirname(__FILE__), 'fixtures', 'fake.yml.erb')
+    know_filename_template_filename = File.join(File.dirname(__FILE__), 'fixtures', 'know_filename.erb')
     restricted_template_filename = File.join(File.dirname(__FILE__), 'fixtures', '0600.yml.erb')
     input_filename = File.join(File.dirname(__FILE__), 'fixtures', 'fake.json')
     expect_filename = File.join(File.dirname(__FILE__), 'fixtures', 'fake.yml')
@@ -38,7 +39,7 @@ describe Generate do
           Generate.render(output, input, restricted_template_filename, nil)
         end
 
-        expect("%o" % File.stat(file.path).mode).to eq('100600')
+        expect(format('%o', File.stat(file.path).mode)).to eq('100600')
       ensure
         file.unlink unless file.nil?
       end
@@ -54,9 +55,19 @@ describe Generate do
       expect(output_buffer.string).to eq(expect_output)
     end
 
+    it 'should know template filename' do
+      # output into string io and compare with expect_filename
+      output_buffer = StringIO.new
+      File.open(input_filename) do |input_file|
+        Generate.render(output_buffer, input_file, know_filename_template_filename, nil)
+      end
+
+      expect(output_buffer.string).to eq(know_filename_template_filename + "\n")
+    end
+
     it 'should create directories for output paths' do
       Dir.mktmpdir('configgin_mkdir_p_test') do |dir|
-        output_file = File.join(dir, "adirectory", "test.yml")
+        output_file = File.join(dir, 'adirectory', 'test.yml')
         Generate.generate(output: output_file, input: input_filename) do |output, input|
           Generate.render(output, input, template_filename, nil)
         end
