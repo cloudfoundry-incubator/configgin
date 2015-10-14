@@ -77,4 +77,20 @@ describe EvaluationContext do
     prop = context.properties.cc.port
     expect(prop).to eq(old_value)
   end
+
+  it "should be able to use p()'s array override" do
+    properties = { 'properties' => {} }
+    config_store = double('ConsulConfigStore')
+    expect_value = 5
+    expect(config_store).to receive(:get)
+      .with('cc.port')
+      .and_return(nil)
+    expect(config_store).to receive(:get)
+      .with('cc.portmap')
+      .and_return(expect_value)
+
+    context = EvaluationContext.new(properties, config_store)
+    prop = context.p(['cc.port', 'cc.portmap'])
+    expect(prop).to eq(expect_value)
+  end
 end
