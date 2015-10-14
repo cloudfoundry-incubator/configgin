@@ -22,7 +22,6 @@ describe EvaluationContext do
     expect(prop).to eq(expect_value)
   end
 
-
   it 'should look up values that exist in properties' do
     properties = { 'properties' => { 'fake' => { 'value' => 5 } } }
     context = EvaluationContext.new(properties, nil)

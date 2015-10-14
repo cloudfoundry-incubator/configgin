@@ -11,7 +11,7 @@ class OpenStructConfigStore < OpenStruct
       @config_store = config_store
     end
 
-    def method_missing(name, *args)
+    def method_missing(name, *_args)
       @key << name.to_s
       val = @config_store.get(@key.join('.'))
       return val unless val.nil?

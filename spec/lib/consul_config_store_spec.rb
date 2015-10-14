@@ -19,8 +19,12 @@ describe ConsulConfigStore do
   end
 
   it "it's values should come back as OpenStructs when hashes are present" do
-    expect(Diplomat::Kv).to receive(:get).with('/prefix/role/cc_role/cc/port').and_return('[{"one": "two"}]')
-    expect(Diplomat::Kv).to receive(:get).with('/prefix/role/cc_role/cc/portmap').and_return('{"one": "two"}')
+    expect(Diplomat::Kv).to receive(:get)
+      .with('/prefix/role/cc_role/cc/port')
+      .and_return('[{"one": "two"}]')
+    expect(Diplomat::Kv).to receive(:get)
+      .with('/prefix/role/cc_role/cc/portmap')
+      .and_return('{"one": "two"}')
 
     expect(@config_store.get('cc.port')[0]).to be_a(OpenStructConfigStore)
     expect(@config_store.get('cc.portmap')).to be_a(OpenStructConfigStore)
