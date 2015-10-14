@@ -13,7 +13,7 @@ class EvaluationContext < Bosh::Template::EvaluationContext
   # @param config_store [Object] Anything that responds to .get(key)
   #                              for retrieving config values.
   def initialize(data, config_store)
-    @config_store = config_store
+    @config_store = config_store # super(data) needs this to be set before it runs
     super(data)
   end
 
@@ -37,21 +37,28 @@ class EvaluationContext < Bosh::Template::EvaluationContext
     @config_store.get(key)
   end
 
+  # openstruct is a helper that calls make_open_struct
+  # cannot be removed because inside initialize() super(data) calls this.
+  def openstruct(object)
+    EvaluationContext::make_open_struct(object, @config_store)
+  end
+
   # Creates a nested OpenStructConfigStore representation of the hash.
   # Overrides Bosh::Template::EvaluationContext.openstruct
   #
-  # @param object [Object] A hash, array or something else.
-  # @return       [OpenStructConfigStore] An object that behaves like OpenStruct.
-  def openstruct(object)
+  # @param object       [Object] A hash, array or something else.
+  # @param config_store [Object] Config store to create OpenStructConfigStore's with
+  # @return             [OpenStructConfigStore] An object that behaves like OpenStruct.
+  def self.make_open_struct(object, config_store)
     case object
     when Hash
       mapped = object.inject({}) { |h, (k, v)|
-        h[k] = openstruct(v)
+        h[k] = make_open_struct(v, config_store)
         h
       }
-      OpenStructConfigStore.new(mapped, config_store: @config_store)
+      OpenStructConfigStore.new(mapped, config_store: config_store)
     when Array
-      object.map { |item| openstruct(item) }
+      object.map { |item| make_open_struct(item, config_store) }
     else
       object
     end
