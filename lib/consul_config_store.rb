@@ -40,6 +40,7 @@ class ConsulConfigStore
 
   # Get the key value pairs for a key prefix from consul.
   #
+  # @param prefix [String] The prefix for the values to return as a hash
   # @return [Hash] The key values turned into a hash.
   def config_for_prefix(prefix)
     begin
@@ -58,25 +59,36 @@ class ConsulConfigStore
     hash
   end
 
+  # Recursively expand a hash
+  #
+  # { "my/key/name" => 5 , "my/key/name2" => 6, "my/other" => 5 }
+  # returns:
+  # {
+  #   "my" => {
+  #     "key" => {
+  #       "name" => 5,
+  #       "name2" => 5
+  #     },
+  #     "other" => 5
+  #   }
+  # }
+  #
+  # @param hash [Hash] A one-level key value, with keys in key/name/here format.
+  # @return [Hash] A nested hash.
   def self.recursively_expand_hash(hash)
     new_hash = {}
-    hash.each_pair do |k, v|
+    keys = hash.keys.sort
+    keys.each do |k|
+      v = hash[k]
       key_parts = k.split('/').reject { |s| s.empty? }
       len = key_parts.length
       i = 1
 
       key_parts.inject(new_hash) do |h, key|
-        unless h.is_a?(Hash)
-          prev_key = key_parts[0..i-2].join('/')
-          this_key = key_parts[0..i-1].join('/')
-          prev_val = hash[prev_key].nil? ? "nil" : hash[prev_key].to_s
-          fail StandardError, "#{prev_key} is a value: #{prev_val}, but also has a sub-key: #{this_key} => #{v}"
-        end
-
         val = nil
         if i == len
           h[key] = v
-        elsif !h.has_key?(key)
+        elsif !h.has_key?(key) || !h[key].is_a?(Hash)
           h[key] = {}
         end
 
