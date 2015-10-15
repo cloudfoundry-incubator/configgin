@@ -17,10 +17,10 @@ describe ConsulConfigStore do
       expect(Diplomat::Kv).to receive(:get)
         .with('/prefix/spec/cloud_controller_ng/', { recurse: true })
         .and_return([
-          { key: '/prefix/spec/cloud_controller_ng/cc/k1', value: '1' },
-          { key: '/prefix/spec/cloud_controller_ng/cc/k2', value: '1' },
-          { key: '/prefix/spec/cloud_controller_ng/cc/k3', value: '1' },
-          { key: '/prefix/spec/cloud_controller_ng/cc/k4', value: '1' },
+          { key: 'prefix/spec/cloud_controller_ng/cc/k1', value: '1' },
+          { key: 'prefix/spec/cloud_controller_ng/cc/k2', value: '1' },
+          { key: 'prefix/spec/cloud_controller_ng/cc/k3', value: '1' },
+          { key: 'prefix/spec/cloud_controller_ng/cc/k4', value: '1' },
          ])
         .ordered
       expect(Diplomat::Kv).to receive(:get)
@@ -47,31 +47,31 @@ describe ConsulConfigStore do
       expect(Diplomat::Kv).to receive(:get)
         .with('/prefix/spec/cloud_controller_ng/', { recurse: true })
         .and_return([
-          { key: '/prefix/spec/cloud_controller_ng/cc/k1', value: '1' },
-          { key: '/prefix/spec/cloud_controller_ng/cc/k2', value: '1' },
-          { key: '/prefix/spec/cloud_controller_ng/cc/k3', value: '1' },
-          { key: '/prefix/spec/cloud_controller_ng/cc/k4', value: '1' },
+          { key: 'prefix/spec/cloud_controller_ng/cc/k1', value: '1' },
+          { key: 'prefix/spec/cloud_controller_ng/cc/k2', value: '1' },
+          { key: 'prefix/spec/cloud_controller_ng/cc/k3', value: '1' },
+          { key: 'prefix/spec/cloud_controller_ng/cc/k4', value: '1' },
          ])
         .ordered
       expect(Diplomat::Kv).to receive(:get)
         .with('/prefix/opinions/', { recurse: true })
         .and_return([
-          { key: '/prefix/opinions/cc/k1', value: '2' },
-          { key: '/prefix/opinions/cc/k2', value: '2' },
-          { key: '/prefix/opinions/cc/k3', value: '2' },
+          { key: 'prefix/opinions/cc/k1', value: '2' },
+          { key: 'prefix/opinions/cc/k2', value: '2' },
+          { key: 'prefix/opinions/cc/k3', value: '2' },
         ])
         .ordered
       expect(Diplomat::Kv).to receive(:get)
         .with('/prefix/user/', { recurse: true })
         .and_return([
-          { key: '/prefix/user/cc/k1', value: '3' },
-          { key: '/prefix/user/cc/k2', value: '3' },
+          { key: 'prefix/user/cc/k1', value: '3' },
+          { key: 'prefix/user/cc/k2', value: '3' },
         ])
         .ordered
       expect(Diplomat::Kv).to receive(:get)
         .with('/prefix/role/cc_role/', { recurse: true })
         .and_return([
-          { key: '/prefix/role/cc_role/cc/k1', value: '4' },
+          { key: 'prefix/role/cc_role/cc/k1', value: '4' },
         ])
         .ordered
 

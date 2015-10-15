@@ -61,7 +61,7 @@ class ConsulConfigStore
   def self.recursively_expand_hash(hash)
     new_hash = {}
     hash.each_pair do |k, v|
-      key_parts = k.split('/')
+      key_parts = k.split('/').reject { |s| s.empty? }
       len = key_parts.length
       i = 1
 
