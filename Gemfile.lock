@@ -3,6 +3,7 @@ GEM
   specs:
     bosh-template (1.3072.0)
       semi_semantic (~> 1.1.0)
+    deep_merge (1.0.1)
     diff-lcs (1.2.5)
     diplomat (0.14.0)
       faraday (~> 0.9)
@@ -31,6 +32,7 @@ PLATFORMS
 
 DEPENDENCIES
   bosh-template (~> 1.3072.0)
+  deep_merge (~> 1.0.1)
   diplomat (~> 0.14.0)
   rspec
 
