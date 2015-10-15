@@ -1,3 +1,12 @@
+GIT
+  remote: https://github.com/hpcloud/diplomat.git
+  revision: f28ff9fd731e258931ab3794d9aaccec58041489
+  branch: recurse-always-arrays
+  specs:
+    diplomat (0.13.2)
+      faraday (~> 0.9)
+      json (~> 1.8)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -5,9 +14,6 @@ GEM
       semi_semantic (~> 1.1.0)
     deep_merge (1.0.1)
     diff-lcs (1.2.5)
-    diplomat (0.14.0)
-      faraday (~> 0.9)
-      json (~> 1.8)
     faraday (0.9.2)
       multipart-post (>= 1.2, < 3)
     json (1.8.3)
@@ -33,7 +39,7 @@ PLATFORMS
 DEPENDENCIES
   bosh-template (~> 1.3072.0)
   deep_merge (~> 1.0.1)
-  diplomat (~> 0.14.0)
+  diplomat!
   rspec
 
 BUNDLED WITH

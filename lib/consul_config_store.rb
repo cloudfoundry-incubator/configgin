@@ -50,7 +50,8 @@ class ConsulConfigStore
 
     hash = {}
     kvpairs.each do |kvp|
-      key = kvp[:key].gsub(/^#{prefix}/, '')
+      key_replace = prefix[1, prefix.length]
+      key = kvp[:key].gsub(/^#{key_replace}/, '')
       hash[key] = YAML.load(kvp[:value])
     end
 
