@@ -143,4 +143,20 @@ describe ConsulConfigStore do
     expect(hash['my']).to be_a(Hash)
     expect(hash['my']['key2']).to eq('value2')
   end
+
+  it 'hash expansion should have a nice error when nil objects have sub-keys' do
+    bad_data = { 'my/key' => nil, 'my/key/name' => 5 }
+
+    expect {
+      ConsulConfigStore.recursively_expand_hash(bad_data)
+    }.to raise_error(StandardError, 'my/key is a value: nil, but also has a sub-key: my/key/name => 5')
+  end
+
+  it 'hash expansion should have a nice error when non-hashes have sub-keys' do
+    bad_data = { 'my/key' => 10, 'my/key/name' => 5 }
+
+    expect {
+      ConsulConfigStore.recursively_expand_hash(bad_data)
+    }.to raise_error(StandardError, 'my/key is a value: 10, but also has a sub-key: my/key/name => 5')
+  end
 end

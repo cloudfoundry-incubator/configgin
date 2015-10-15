@@ -66,6 +66,13 @@ class ConsulConfigStore
       i = 1
 
       key_parts.inject(new_hash) do |h, key|
+        unless h.is_a?(Hash)
+          prev_key = key_parts[0..i-2].join('/')
+          this_key = key_parts[0..i-1].join('/')
+          prev_val = hash[prev_key].nil? ? "nil" : hash[prev_key].to_s
+          fail StandardError, "#{prev_key} is a value: #{prev_val}, but also has a sub-key: #{this_key} => #{v}"
+        end
+
         val = nil
         if i == len
           h[key] = v

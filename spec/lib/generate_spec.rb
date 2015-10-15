@@ -4,7 +4,13 @@ require 'stringio'
 require 'tempfile'
 
 describe Generate do
-  context 'with some file paths' do
+  context 'with some file paths and an eval context' do
+
+    before do
+      @config_store = double('ConsulConfigStore')
+      expect(@config_store).to receive(:build).and_return({})
+    end
+
     template_filename = File.join(File.dirname(__FILE__), 'fixtures', 'fake.yml.erb')
     know_filename_template_filename = File.join(File.dirname(__FILE__), 'fixtures', 'know_filename.erb')
     restricted_template_filename = File.join(File.dirname(__FILE__), 'fixtures', '0600.yml.erb')
@@ -18,7 +24,7 @@ describe Generate do
         file.close
 
         Generate.generate(output: file.path, input: input_filename) do |output, input|
-          Generate.render(output, input, template_filename, nil)
+          Generate.render(output, input, template_filename, @config_store)
         end
 
         output = YAML.load_file(file.path)
@@ -36,7 +42,7 @@ describe Generate do
         File.chmod(0600, restricted_template_filename)
 
         Generate.generate(output: file.path, input: input_filename) do |output, input|
-          Generate.render(output, input, restricted_template_filename, nil)
+          Generate.render(output, input, restricted_template_filename, @config_store)
         end
 
         expect(format('%o', File.stat(file.path).mode)).to eq('100600')
@@ -49,7 +55,7 @@ describe Generate do
       # output into string io and compare with expect_filename
       output_buffer = StringIO.new
       File.open(input_filename) do |input_file|
-        Generate.render(output_buffer, input_file, template_filename, nil)
+        Generate.render(output_buffer, input_file, template_filename, @config_store)
       end
 
       expect(output_buffer.string).to eq(expect_output)
@@ -59,7 +65,7 @@ describe Generate do
       # output into string io and compare with expect_filename
       output_buffer = StringIO.new
       File.open(input_filename) do |input_file|
-        Generate.render(output_buffer, input_file, know_filename_template_filename, nil)
+        Generate.render(output_buffer, input_file, know_filename_template_filename, @config_store)
       end
 
       expect(output_buffer.string).to eq(know_filename_template_filename + "\n")
@@ -69,7 +75,7 @@ describe Generate do
       Dir.mktmpdir('configgin_mkdir_p_test') do |dir|
         output_file = File.join(dir, 'adirectory', 'test.yml')
         Generate.generate(output: output_file, input: input_filename) do |output, input|
-          Generate.render(output, input, template_filename, nil)
+          Generate.render(output, input, template_filename, @config_store)
         end
 
         output = YAML.load_file(output_file)
