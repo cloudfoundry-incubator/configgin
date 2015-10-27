@@ -9,4 +9,5 @@ gem 'deep_merge', '~> 1.0.1'
 
 group :test do
   gem 'rspec'
+  gem 'rubocop'
 end

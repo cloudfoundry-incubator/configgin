@@ -2,11 +2,17 @@
 
 set -e
 
-if [[ -z $CONFIGGIN_VERSION ]]; then
-	CONFIGGIN_VERSION=0.0.0
+if [ "$APP_VERSION" == "" ] ; then
+	echo "APP_VERSION not set, aborting. Please call this from make."
+	exit 1
 fi
 
-app_name="configgin-${CONFIGGIN_VERSION}-linux-x86_64"
+if [ "$BRANCH" == "" ] ; then
+	echo "BRANCH not set, aborting. Please call this from make."
+	exit 1
+fi
+
+app_name="configgin-${APP_VERSION}_${BRANCH}-linux-x86_64"
 traveling_ruby="traveling-ruby-20141215-2.1.5-linux-x86_64.tar.gz"
 
 mkdir -p ./output/${app_name}/lib/app
