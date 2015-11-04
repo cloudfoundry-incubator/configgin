@@ -16,7 +16,7 @@ module Cli
       fail ArgMissingError, 'input or data'
     end
 
-    [:template, :consul, :prefix, :job, :role].each do |key|
+    [:template, :consul, :prefix, :release, :job, :role].each do |key|
       if options[key].nil? || options[key].empty?
         fail ArgMissingError, key.to_s
       end
@@ -45,6 +45,9 @@ module Cli
       end
       opts.on('-p', '--prefix name', 'Consul config key prefix') do |p|
         options[:prefix] = p
+      end
+      opts.on('--release name', 'CF release name') do |r|
+        options[:release] = r
       end
       opts.on('-j', '--job name', 'Job name') do |j|
         options[:job] = j

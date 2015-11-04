@@ -7,10 +7,12 @@ class ConsulConfigStore
   #
   # @param consul_address [String] The address to the consul agent/server
   # @param prefix         [String] The prefix of the key sets.
+  # @param release        [String] The BOSH release (cf, diego, etc.)
   # @param job            [String] Job name
   # @param role           [String] Role name
-  def initialize(consul_address, prefix, job, role)
+  def initialize(consul_address, prefix, release, job, role)
     @prefix = prefix
+    @release = release
     @job = job
     @role = role
 
@@ -24,7 +26,7 @@ class ConsulConfigStore
   # @return       [Hash]   The giant hash from consul
   def build()
     lookup_order = %W(
-      /#{@prefix}/spec/#{@job}/
+      /#{@prefix}/spec/#{@release}/#{@job}/
       /#{@prefix}/opinions/
       /#{@prefix}/user/
       /#{@prefix}/role/#{@role}/
