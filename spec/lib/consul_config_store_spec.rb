@@ -8,19 +8,20 @@ describe ConsulConfigStore do
 
       @address = 'address'
       @prefix = 'prefix'
+      @release = 'release'
       @job = 'cloud_controller_ng'
       @role = 'cc_role'
-      @config_store = ConsulConfigStore.new(@address, @prefix, @job, @role)
+      @config_store = ConsulConfigStore.new(@address, @prefix, @release, @job, @role)
     end
 
     it 'should ignore hashes that have no key found' do
       expect(Diplomat::Kv).to receive(:get)
-        .with('/prefix/spec/cloud_controller_ng/', { recurse: true })
+        .with('/prefix/spec/release/cloud_controller_ng/', { recurse: true })
         .and_return([
-          { key: 'prefix/spec/cloud_controller_ng/cc/k1', value: '1' },
-          { key: 'prefix/spec/cloud_controller_ng/cc/k2', value: '1' },
-          { key: 'prefix/spec/cloud_controller_ng/cc/k3', value: '1' },
-          { key: 'prefix/spec/cloud_controller_ng/cc/k4', value: '1' },
+          { key: 'prefix/spec/release/cloud_controller_ng/cc/k1', value: '1' },
+          { key: 'prefix/spec/release/cloud_controller_ng/cc/k2', value: '1' },
+          { key: 'prefix/spec/release/cloud_controller_ng/cc/k3', value: '1' },
+          { key: 'prefix/spec/release/cloud_controller_ng/cc/k4', value: '1' },
          ])
         .ordered
       expect(Diplomat::Kv).to receive(:get)
@@ -45,12 +46,12 @@ describe ConsulConfigStore do
 
     it 'should create an overridden set of hashes, getting the final value correct' do
       expect(Diplomat::Kv).to receive(:get)
-        .with('/prefix/spec/cloud_controller_ng/', { recurse: true })
+        .with('/prefix/spec/release/cloud_controller_ng/', { recurse: true })
         .and_return([
-          { key: 'prefix/spec/cloud_controller_ng/cc/k1', value: '1' },
-          { key: 'prefix/spec/cloud_controller_ng/cc/k2', value: '1' },
-          { key: 'prefix/spec/cloud_controller_ng/cc/k3', value: '1' },
-          { key: 'prefix/spec/cloud_controller_ng/cc/k4', value: '1' },
+          { key: 'prefix/spec/release/cloud_controller_ng/cc/k1', value: '1' },
+          { key: 'prefix/spec/release/cloud_controller_ng/cc/k2', value: '1' },
+          { key: 'prefix/spec/release/cloud_controller_ng/cc/k3', value: '1' },
+          { key: 'prefix/spec/release/cloud_controller_ng/cc/k4', value: '1' },
          ])
         .ordered
       expect(Diplomat::Kv).to receive(:get)
@@ -84,7 +85,7 @@ describe ConsulConfigStore do
     end
 
     it 'should fetch collections of hashes' do
-      prefix = '/hcf/spec/cloud_controller_ng'
+      prefix = '/hcf/spec/release/cloud_controller_ng'
       expect(Diplomat::Kv).to receive(:get)
         .with(prefix, { recurse: true })
         .and_return([
@@ -99,7 +100,7 @@ describe ConsulConfigStore do
     end
 
     it 'should yaml decode when fetching' do
-      prefix = '/hcf/spec/cloud_controller_ng'
+      prefix = '/hcf/spec/release/cloud_controller_ng'
       expect(Diplomat::Kv).to receive(:get)
         .with(prefix, { recurse: true })
         .and_return([
