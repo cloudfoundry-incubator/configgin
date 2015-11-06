@@ -18,4 +18,4 @@ lint:
 	bundle exec rubocop --fail-level=error
 
 dist:
-	./package.sh BRANCH=$(BRANCH) BUILD=$(BUILD) APP_VERSION=$(APP_VERSION)
+	/usr/bin/env BRANCH=$(BRANCH) BUILD=$(BUILD) APP_VERSION=$(APP_VERSION) ./package.sh
