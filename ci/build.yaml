@@ -6,4 +6,6 @@ inputs:
   - name: source
 
 run:
-  path: source/Makefile all
+  path: source/Makefile
+  args:
+    - all
