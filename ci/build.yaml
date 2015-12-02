@@ -1,0 +1,9 @@
+---
+platform: linux
+image: 'docker:///ruby#2.1.5'
+
+inputs:
+  - name: source
+
+run:
+  path: source/Makefile all
