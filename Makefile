@@ -1,3 +1,5 @@
+#!/usr/bin/env make
+
 .PHONY: install test dist
 
 all: lint test dist
