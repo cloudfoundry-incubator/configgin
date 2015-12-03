@@ -13,13 +13,13 @@ APP_VERSION=$(VERSION)-$(BUILD)
 install:
 	@ true
 
-test:
+test: dependencies
 	bundle exec rspec $(RSPEC_ARGS)
 
 dependencies:
 	bundle package
 
-lint:
+lint: dependencies
 	bundle exec rubocop --fail-level=error
 
 dist:
