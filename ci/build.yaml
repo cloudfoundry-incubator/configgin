@@ -8,5 +8,5 @@ inputs:
 run:
   path: make
   args:
-    - '-C source'
+    - '-C /tmp/build/get'
     - all
