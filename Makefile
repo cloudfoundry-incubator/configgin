@@ -2,7 +2,7 @@
 
 .PHONY: install test dist
 
-all: lint test dist
+all: dependencies lint test dist
 
 include version.mk
 
@@ -15,6 +15,9 @@ install:
 
 test:
 	bundle exec rspec $(RSPEC_ARGS)
+
+dependencies:
+	bundle package
 
 lint:
 	bundle exec rubocop --fail-level=error
