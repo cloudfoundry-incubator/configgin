@@ -72,4 +72,7 @@ EOL
 	cd ./output/${app_name}
 	tar -zcf ../${app_name}.tgz .
 )
+echo PWD is $PWD
+find $PWD -type f -name *.tgz
+find $PWD -type f
 # vim: set ts=2:
