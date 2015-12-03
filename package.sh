@@ -1,5 +1,7 @@
 #!/bin/bash
 
+apt-get install --assume-yes rsync
+
 set -e
 
 if [ "$APP_VERSION" == "" ] ; then
