@@ -6,7 +6,10 @@ inputs:
   - name: source
 
 run:
-  path: make
+  path: find
   args:
-    - '-C /tmp/build/get'
-    - all
+    - .
+#  path: make
+#  args:
+#    - '-C /tmp/build/get'
+#    - all
