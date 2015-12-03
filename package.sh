@@ -1,5 +1,6 @@
 #!/bin/bash
 
+apt-get update
 apt-get install --assume-yes rsync
 
 set -e
