@@ -5,6 +5,9 @@ image: 'docker:///ruby#2.1.5'
 inputs:
   - name: source
 
+outputs:
+  - name: configgin
+    file: source/output/*.tgz
 run:
   path: make
   args:
