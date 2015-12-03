@@ -8,5 +8,6 @@ inputs:
 run:
   path: make
   args:
-    - -C source
+    - -C
+    - source
     - all
