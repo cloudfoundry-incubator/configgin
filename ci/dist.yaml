@@ -6,7 +6,7 @@ inputs:
   - name: source
 
 outputs:
-  - name: configgin
+  - name: dist
     path: source/output
 run:
   path: make
