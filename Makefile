@@ -4,18 +4,23 @@ all: lint test dist
 
 include version.mk
 
-BRANCH:=$(shell git rev-parse --short HEAD)
-BUILD:=$(shell whoami)-$(BRANCH)-$(shell date -u +%Y%m%d%H%M%S)
-APP_VERSION=$(VERSION)-$(BUILD)
+NAME=configgin
+BRANCH:=$(shell git rev-parse --symbolic --branches | head -n1)
+COMMIT:=$(shell git describe --tags --long | sed -r 's/[0-9\.]+-([0-9]+-g[a-f0-9]+)/$(VERSION)+\1/')
+APP_VERSION=$(NAME)-$(COMMIT).$(BRANCH)
 
 install:
 	@ true
 
-test:
+vendor/sentinel: Gemfile Gemfile.lock
+	bundle package
+	touch $@
+
+test: vendor/sentinel
 	bundle exec rspec $(RSPEC_ARGS)
 
-lint:
+lint: vendor/sentinel
 	bundle exec rubocop --fail-level=error
 
 dist:
-	/usr/bin/env BRANCH=$(BRANCH) BUILD=$(BUILD) APP_VERSION=$(APP_VERSION) ./package.sh
+	/usr/bin/env APP_VERSION=$(APP_VERSION) ./package.sh
