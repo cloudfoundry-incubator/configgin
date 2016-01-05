@@ -7,16 +7,11 @@ if [ "$APP_VERSION" == "" ] ; then
 	exit 1
 fi
 
-if [ "$BRANCH" == "" ] ; then
-	echo "BRANCH not set, aborting. Please call this from make."
-	exit 1
-fi
-
-app_name="configgin-${APP_VERSION}_${BRANCH}-linux-x86_64"
+app_name="${APP_VERSION}-linux-x86_64"
 traveling_ruby="traveling-ruby-20141215-2.1.5-linux-x86_64.tar.gz"
 
 mkdir -p ./output/${app_name}/lib/app
-rsync -a --exclude output --exclude .git --exclude .gitignore  ./ ./output/${app_name}/lib/app
+tar -c --exclude=output --exclude=.gitignore --exclude=.git ./ | tar -x -C ./output/${app_name}/lib/app
 
 mkdir -p ./output/packaging
 
