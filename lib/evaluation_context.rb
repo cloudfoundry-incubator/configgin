@@ -1,5 +1,6 @@
 require 'bosh/template/evaluation_context'
 require 'deep_merge'
+require 'shellwords'
 
 # EvaluationContext looks up values in a hybrid bosh-template way but also
 # using a fallback config_store (an example of which is ConsulConfigStore)
