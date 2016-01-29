@@ -5,8 +5,8 @@ all: lint test dist
 include version.mk
 
 NAME=configgin
-BRANCH:=$(shell git rev-parse --symbolic --branches | head -n1)
-COMMIT:=$(shell git describe --tags --long | sed -r 's/[0-9\.]+-([0-9]+-g[a-f0-9]+)/$(VERSION)+\1/')
+BRANCH:=$(shell git rev-parse --abbrev-ref HEAD)
+COMMIT:=$(shell git describe --tags --long | sed -r 's/[0-9.]+-([0-9]+)-(g[a-f0-9]+)/$(VERSION)+\1.\2/')
 APP_VERSION=$(NAME)-$(COMMIT).$(BRANCH)
 
 install:
