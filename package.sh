@@ -7,7 +7,7 @@ if [ "$APP_VERSION" == "" ] ; then
 	exit 1
 fi
 
-app_name="${APP_VERSION}-linux-x86_64"
+app_name="${APP_VERSION}-linux-amd64"
 traveling_ruby="traveling-ruby-20141215-2.1.5-linux-x86_64.tar.gz"
 
 mkdir -p ./output/${app_name}/lib/app
