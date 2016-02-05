@@ -28,7 +28,11 @@ rescue ArgMissingError => e
   exit(1)
 end
 
-config_store = ConsulConfigStore.new(options[:consul], options[:prefix], options[:release], options[:job], options[:role])
+config_store = ConsulConfigStore.new(options[:consul],
+                                     options[:prefix],
+                                     options[:release],
+                                     options[:job],
+                                     options[:role])
 
 Generate.generate(output: options[:output], input: options[:input], data: options[:data]) do |output, input|
   Generate.render(output, input, options[:template], config_store)

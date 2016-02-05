@@ -24,7 +24,7 @@ class ConsulConfigStore
   # Build the configuration hash using specific lookup rules
   #
   # @return       [Hash]   The giant hash from consul
-  def build()
+  def build
     lookup_order = %W(
       /#{@prefix}/spec/#{@release}/#{@job}/
       /#{@prefix}/opinions/
@@ -46,7 +46,7 @@ class ConsulConfigStore
   # @return [Hash] The key values turned into a hash.
   def config_for_prefix(prefix)
     begin
-      kvpairs = Diplomat::Kv.get(prefix, { recurse: true })
+      kvpairs = Diplomat::Kv.get(prefix, recurse: true)
     rescue Diplomat::KeyNotFound
       return {}
     end
@@ -82,15 +82,14 @@ class ConsulConfigStore
     keys = hash.keys.sort
     keys.each do |k|
       v = hash[k]
-      key_parts = k.split('/').reject { |s| s.empty? }
+      key_parts = k.split('/').reject(&:empty?)
       len = key_parts.length
       i = 1
 
       key_parts.inject(new_hash) do |h, key|
-        val = nil
         if i == len
           h[key] = v
-        elsif !h.has_key?(key) || !h[key].is_a?(Hash)
+        elsif !h.key?(key) || !h[key].is_a?(Hash)
           h[key] = {}
         end
 

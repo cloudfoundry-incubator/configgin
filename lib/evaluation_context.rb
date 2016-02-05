@@ -13,7 +13,7 @@ class EvaluationContext < Bosh::Template::EvaluationContext
   # @param config_store [Object] Anything that responds to .get(key)
   #                              for retrieving config values.
   def initialize(data, config_store)
-    hash = config_store.build()
+    hash = config_store.build
     data['properties'] = hash.deep_merge!(data['properties'])
     super(data)
   end

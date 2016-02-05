@@ -5,7 +5,6 @@ require 'tempfile'
 
 describe Generate do
   context 'with some file paths and an eval context' do
-
     before do
       @config_store = double('ConsulConfigStore')
       expect(@config_store).to receive(:build).and_return({})

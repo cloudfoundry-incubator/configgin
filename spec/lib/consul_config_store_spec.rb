@@ -16,23 +16,23 @@ describe ConsulConfigStore do
 
     it 'should ignore hashes that have no key found' do
       expect(Diplomat::Kv).to receive(:get)
-        .with('/prefix/spec/release/cloud_controller_ng/', { recurse: true })
+        .with('/prefix/spec/release/cloud_controller_ng/', recurse: true)
         .and_return([
           { key: 'prefix/spec/release/cloud_controller_ng/cc/k1', value: '1' },
           { key: 'prefix/spec/release/cloud_controller_ng/cc/k2', value: '1' },
           { key: 'prefix/spec/release/cloud_controller_ng/cc/k3', value: '1' },
-          { key: 'prefix/spec/release/cloud_controller_ng/cc/k4', value: '1' },
-         ])
+          { key: 'prefix/spec/release/cloud_controller_ng/cc/k4', value: '1' }
+        ])
         .ordered
       expect(Diplomat::Kv).to receive(:get)
         .and_raise(Diplomat::KeyNotFound)
         .ordered
       expect(Diplomat::Kv).to receive(:get)
-        .with('/prefix/user/', { recurse: true })
+        .with('/prefix/user/', recurse: true)
         .and_raise(Diplomat::KeyNotFound)
         .ordered
       expect(Diplomat::Kv).to receive(:get)
-        .with('/prefix/role/cc_role/', { recurse: true })
+        .with('/prefix/role/cc_role/', recurse: true)
         .and_raise(Diplomat::KeyNotFound)
         .ordered
 
@@ -46,33 +46,33 @@ describe ConsulConfigStore do
 
     it 'should create an overridden set of hashes, getting the final value correct' do
       expect(Diplomat::Kv).to receive(:get)
-        .with('/prefix/spec/release/cloud_controller_ng/', { recurse: true })
+        .with('/prefix/spec/release/cloud_controller_ng/', recurse: true)
         .and_return([
           { key: 'prefix/spec/release/cloud_controller_ng/cc/k1', value: '1' },
           { key: 'prefix/spec/release/cloud_controller_ng/cc/k2', value: '1' },
           { key: 'prefix/spec/release/cloud_controller_ng/cc/k3', value: '1' },
-          { key: 'prefix/spec/release/cloud_controller_ng/cc/k4', value: '1' },
-         ])
+          { key: 'prefix/spec/release/cloud_controller_ng/cc/k4', value: '1' }
+        ])
         .ordered
       expect(Diplomat::Kv).to receive(:get)
-        .with('/prefix/opinions/', { recurse: true })
+        .with('/prefix/opinions/', recurse: true)
         .and_return([
           { key: 'prefix/opinions/cc/k1', value: '2' },
           { key: 'prefix/opinions/cc/k2', value: '2' },
-          { key: 'prefix/opinions/cc/k3', value: '2' },
+          { key: 'prefix/opinions/cc/k3', value: '2' }
         ])
         .ordered
       expect(Diplomat::Kv).to receive(:get)
-        .with('/prefix/user/', { recurse: true })
+        .with('/prefix/user/', recurse: true)
         .and_return([
           { key: 'prefix/user/cc/k1', value: '3' },
-          { key: 'prefix/user/cc/k2', value: '3' },
+          { key: 'prefix/user/cc/k2', value: '3' }
         ])
         .ordered
       expect(Diplomat::Kv).to receive(:get)
-        .with('/prefix/role/cc_role/', { recurse: true })
+        .with('/prefix/role/cc_role/', recurse: true)
         .and_return([
-          { key: 'prefix/role/cc_role/cc/k1', value: '4' },
+          { key: 'prefix/role/cc_role/cc/k1', value: '4' }
         ])
         .ordered
 
@@ -87,25 +87,25 @@ describe ConsulConfigStore do
     it 'should fetch collections of hashes' do
       prefix = '/hcf/spec/release/cloud_controller_ng'
       expect(Diplomat::Kv).to receive(:get)
-        .with(prefix, { recurse: true })
+        .with(prefix, recurse: true)
         .and_return([
           { key: 'my/key/name', value: 'value' },
-          { key: 'my/key/name2', value: 'value2' },
-         ])
+          { key: 'my/key/name2', value: 'value2' }
+        ])
 
       hash = @config_store.config_for_prefix(prefix)
 
       expect(hash).to be_a(Hash)
-      expect(hash['my/key/name']).to eq("value")
+      expect(hash['my/key/name']).to eq('value')
     end
 
     it 'should yaml decode when fetching' do
       prefix = '/hcf/spec/release/cloud_controller_ng'
       expect(Diplomat::Kv).to receive(:get)
-        .with(prefix, { recurse: true })
+        .with(prefix, recurse: true)
         .and_return([
-          { key: 'my/key/name', value: '5' },
-         ])
+          { key: 'my/key/name', value: '5' }
+        ])
 
       hash = @config_store.config_for_prefix(prefix)
 
@@ -116,10 +116,10 @@ describe ConsulConfigStore do
   end
 
   it 'should recursively expand a hash' do
-    hash = ConsulConfigStore.recursively_expand_hash({
+    hash = ConsulConfigStore.recursively_expand_hash(
       'my/key/name' => 'value',
-      'my/key2' => 'value2',
-    })
+      'my/key2' => 'value2'
+    )
 
     expect(hash).to be_a(Hash)
     expect(hash['my']).to be_a(Hash)
@@ -131,10 +131,10 @@ describe ConsulConfigStore do
   end
 
   it 'should recursively expand a hash' do
-    hash = ConsulConfigStore.recursively_expand_hash({
+    hash = ConsulConfigStore.recursively_expand_hash(
       'my/key/name' => 'value',
-      'my/key2' => 'value2',
-    })
+      'my/key2' => 'value2'
+    )
 
     expect(hash).to be_a(Hash)
     expect(hash['my']).to be_a(Hash)

@@ -16,7 +16,8 @@ describe Cli do
 
   context 'with a full config' do
     let(:config) {
-      { consul: 'consul', data: 'data', template: 'template', release: 'release', job: 'job', role: 'role', prefix: 'prefix' }
+      { consul: 'consul', data: 'data', template: 'template',
+        release: 'release', job: 'job', role: 'role', prefix: 'prefix' }
     }
 
     it 'should accept correct arrangements of arguments' do
