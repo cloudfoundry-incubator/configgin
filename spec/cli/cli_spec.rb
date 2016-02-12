@@ -8,16 +8,10 @@ describe Cli do
     expect(Cli.make_option_parser({})).to be_an(OptionParser)
   end
 
-  it 'it should prevent input and data from both being specified' do
-    expect {
-      Cli.check_opts(input: 'input', data: 'data')
-    }.to raise_error(ArgConflictError)
-  end
-
   context 'with a full config' do
     let(:config) {
-      { consul: 'consul', data: 'data', template: 'template',
-        release: 'release', job: 'job', role: 'role', prefix: 'prefix' }
+      { input: '/tmp/in.file', output: '/tmp/out.file',
+        base: '/tmp/base.json', templates: '/tmp/templates.tml' }
     }
 
     it 'should accept correct arrangements of arguments' do
@@ -26,54 +20,32 @@ describe Cli do
       }.not_to raise_error
     end
 
-    it 'should fail if input AND data is missing' do
+    it 'should fail if input is missing' do
       config.delete(:input)
-      config.delete(:data)
       expect {
         Cli.check_opts(config)
-      }.to raise_error(ArgMissingError, 'input or data')
+      }.to raise_error(ArgMissingError, 'input')
     end
 
-    it 'should fail if template is missing' do
-      config.delete(:template)
+    it 'should fail if output is missing' do
+      config.delete(:output)
       expect {
         Cli.check_opts(config)
-      }.to raise_error(ArgMissingError, 'template')
+      }.to raise_error(ArgMissingError, 'output')
     end
 
-    it 'should fail if consul is missing' do
-      config.delete(:consul)
+    it 'should fail if base is missing' do
+      config.delete(:base)
       expect {
         Cli.check_opts(config)
-      }.to raise_error(ArgMissingError, 'consul')
+      }.to raise_error(ArgMissingError, 'base')
     end
 
-    it 'should fail if prefix is missing' do
-      config.delete(:prefix)
+    it 'should fail if templates is missing' do
+      config.delete(:templates)
       expect {
         Cli.check_opts(config)
-      }.to raise_error(ArgMissingError, 'prefix')
-    end
-
-    it 'should fail if release is missing' do
-      config.delete(:release)
-      expect {
-        Cli.check_opts(config)
-      }.to raise_error(ArgMissingError, 'release')
-    end
-
-    it 'should fail if job is missing' do
-      config.delete(:job)
-      expect {
-        Cli.check_opts(config)
-      }.to raise_error(ArgMissingError, 'job')
-    end
-
-    it 'should fail if role is missing' do
-      config.delete(:role)
-      expect {
-        Cli.check_opts(config)
-      }.to raise_error(ArgMissingError, 'role')
+      }.to raise_error(ArgMissingError, 'templates')
     end
   end
 end

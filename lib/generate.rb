@@ -1,5 +1,4 @@
 require 'bosh/template/renderer'
-require 'evaluation_context'
 require 'json'
 
 # Generate has methods for manipulating streams and generating configuration
@@ -12,22 +11,14 @@ module Generate
   #
   # @param data     [String] The input as a string (overrides input param)
   # @param output   [String] The output filepath (or nil for stdout)
-  # @param input    [String] The input filepath (or nil for stdin)
   # @param block    [Block]  The block to pass the streams to (out_stream, in_stream)
-  def self.generate(data: nil, output: nil, input: nil, &_block)
-    in_file = STDIN
+  def self.generate(data: nil, output: nil, &_block)
     out_file = STDOUT
 
     if !data.nil?
       in_file = StringIO.new(data)
-    elsif !input.nil?
-      begin
-        in_file = File.open(input, 'r')
-      rescue Errno::ENOENT => e
-        in_file = nil
-        STDERR.puts("failed to open input file #{input}: #{e}")
-        return
-      end
+    else
+      raise NoDataProvided
     end
 
     unless output.nil?
@@ -44,7 +35,6 @@ module Generate
 
     yield out_file, in_file
   ensure
-    in_file.close if !in_file.nil? && !input.nil?
     out_file.close if !out_file.nil? && !output.nil?
   end
 
@@ -54,11 +44,10 @@ module Generate
   # @param output       [IO]     The output stream
   # @param input        [IO]     The input stream
   # @param template     [String] The template filepath
-  # @param config_store [Object] A configuration store (anything that responds to get(key)
-  def self.render(out_file, in_file, template, config_store)
+  def self.render(out_file, in_file, template)
     data = in_file.read
     spec = JSON.parse(data)
-    evaluation_context = EvaluationContext.new(spec, config_store)
+    evaluation_context = Bosh::Template::EvaluationContext.new(spec)
 
     begin
       perms = File.stat(template).mode

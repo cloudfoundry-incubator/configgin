@@ -1,3 +1,4 @@
 /output
 /vendor/cache/
 /vendor/sentinel
+/.bundle/

@@ -10,7 +10,7 @@ $LOAD_PATH.unshift(File.join(ROOT_DIR, 'lib'))
 
 require 'cli'
 require 'generate'
-require 'consul_config_store'
+require 'environment_config_transmogrifier'
 
 options = {}
 parser = Cli.make_option_parser(options)
@@ -28,12 +28,12 @@ rescue ArgMissingError => e
   exit(1)
 end
 
-config_store = ConsulConfigStore.new(options[:consul],
-                                     options[:prefix],
-                                     options[:release],
-                                     options[:job],
-                                     options[:role])
+base_config = JSON.parse(File.read(options[:base]))
+templates = YAML::load_file(options[:templates])
 
-Generate.generate(output: options[:output], input: options[:input], data: options[:data]) do |output, input|
-  Generate.render(output, input, options[:template], config_store)
+transmogrifier = EnvironmentConfigTransmogrifier.new(base_config, templates)
+bosh_spec = transmogrifier.transmogrify
+
+Generate.generate(output: options[:output], data: bosh_spec.to_json) do |output_stream, huge_config|
+  Generate.render(output_stream, huge_config, options[:input])
 end
