@@ -1,36 +1,66 @@
 # configgin
 
-A simple cli app in ruby to generate configurations using bosh erb templates
-but also pulling in consul configuration values where necessary.
+A simple cli app in ruby to generate configurations using bosh erb templates and
+a bosh spec, but also using configurations based on environment variables,
+processed using a set of templates.
 
-Typically bosh-templates use a "context" (some data) to merge with the templates
-in order to create the configuration. But because consul is the primary
-source of this data you can typically just pass in a dummy-value for the simple
-things that are required of the json object.
+## Usage
 
-```bash
-# Example of using context instead of input file, piping stdout output to a file.
-configgin --data '{"index": 0, "job": {"name": "uaa"}, "properties":{}}' template.yml.erb > output.yml
+```
+Usage: configgin [options]
+    -i, --input-erb file             Input erb template
+    -o, --output file                Output to file
+    -b, --base file                  Base configuration JSON
+    -e, --env2conf file              Environment to configuration templates YAML
 ```
 
-### Controlling input and output
+## Examples
 
-configgin should usually be invoked like so:
-
-```bash
-configgin --data '{"index": 0, "job": {"name": "uaa"}, "properties":{}}' \
-  --job cloud_controller_ng \
-  --role cc \
-  --consul http://127.0.0.1:8500 \
-  template.yml.erb > output.yml
+### Example BOSH spec (bosh_spec.json)
+```json
+{
+    "job": {
+        "name": "mysql",
+        "templates": [
+            {
+                "name": "mysql"
+            },
+            {
+                "name": "consul_agent"
+            }
+        ]
+    },
+    "networks": {
+        "default": {}
+    },
+    "properties": {
+        "acceptance_tests": {
+            "include_services": false,
+            "include_sso": false,
+            "nodes": 2,
+        }
+    }
+}  
 ```
 
-If you don't want to provide json on the command line, you can specify a filename
-via the --input parameter instead of --data.
+### Example environment variable template file (env2.conf.yml)
+```yaml
+---
+properties.acceptance_tests.nodes: "((TEST_NODE_COUNT))"
+properties.uaa.scim.users: "'((TEST_VAR))'"
+```
 
-If you don't want to redirect output you can specify an output file using --output.
+### Example template (my_template.erb)
+```erb
+Hello, this is the users property: <%= p("uaa.scim.users") %>
+```
 
+### Example of using the tool
 ```bash
-# Example of using input and output files with a template.
-configgin --input myjsondata.json --output output.yml --job a --role b --consul c template.yml.erb
+TEST_VAR=foo
+configgin \
+  -b ~/tmp/bosh_spec.json \
+  -e ~/tmp/env2.conf.yml \
+  -i ~/tmp/my_template.erb \
+  -o ~/tmp/output_file
 ```
