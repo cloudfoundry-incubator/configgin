@@ -11,7 +11,7 @@ describe Cli do
   context 'with a full config' do
     let(:config) {
       { input: '/tmp/in.file', output: '/tmp/out.file',
-        base: '/tmp/base.json', templates: '/tmp/templates.tml' }
+        base: '/tmp/base.json', env2conf: '/tmp/templates.tml' }
     }
 
     it 'should accept correct arrangements of arguments' do
@@ -42,10 +42,10 @@ describe Cli do
     end
 
     it 'should fail if templates is missing' do
-      config.delete(:templates)
+      config.delete(:env2conf)
       expect {
         Cli.check_opts(config)
-      }.to raise_error(ArgMissingError, 'templates')
+      }.to raise_error(ArgMissingError, 'env2conf')
     end
   end
 end

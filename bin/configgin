@@ -16,7 +16,6 @@ options = {}
 parser = Cli.make_option_parser(options)
 
 parser.parse!(ARGV)
-options[:template] = ARGV.last
 
 begin
   Cli.check_opts(options)
@@ -28,12 +27,9 @@ rescue ArgMissingError => e
   exit(1)
 end
 
-base_config = JSON.parse(File.read(options[:base]))
-templates = YAML::load_file(options[:templates])
+base_config = JSON.load(File.read(options[:base]))
+templates = YAML.load_file(options[:env2conf])
 
-transmogrifier = EnvironmentConfigTransmogrifier.new(base_config, templates)
-bosh_spec = transmogrifier.transmogrify
+bosh_spec = EnvironmentConfigTransmogrifier.transmogrify(base_config, templates)
 
-Generate.generate(output: options[:output], data: bosh_spec.to_json) do |output_stream, huge_config|
-  Generate.render(output_stream, huge_config, options[:input])
-end
+Generate.generate(bosh_spec, options[:input], options[:output])

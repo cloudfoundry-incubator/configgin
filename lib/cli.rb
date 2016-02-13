@@ -8,9 +8,9 @@ module Cli
   #
   # @param options [Hash] The options to check
   def self.check_opts(options)
-    [:input, :output, :base, :templates].each do |key|
+    [:input, :output, :base, :env2conf].each do |key|
       if options[key].nil? || options[key].empty?
-        fail ArgMissingError, key.to_s
+        raise ArgMissingError, key.to_s
       end
     end
   end
@@ -24,7 +24,7 @@ module Cli
       opts.banner = 'Usage: configgin [options]'
 
       # Input template file
-      opts.on('-i', '--input file', 'Input from file') do |i|
+      opts.on('-i', '--input-erb file', 'Input erb template') do |i|
         options[:input] = i
       end
 
@@ -38,9 +38,9 @@ module Cli
         options[:base] = b
       end
 
-      # Config templates file
-      opts.on('-t', '--templates file', 'Configuration templates YAML') do |t|
-        options[:templates] = t
+      # Environment to configuration templates file
+      opts.on('-e', '--env2conf file', 'Environment to configuration templates YAML') do |e|
+        options[:env2conf] = e
       end
     end
   end
