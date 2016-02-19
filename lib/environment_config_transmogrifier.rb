@@ -4,6 +4,15 @@ require 'mustache'
 # EnvironmentConfigTransmogrifier uses environment variables to generate config values
 # for specific keys.
 module EnvironmentConfigTransmogrifier
+  # NoEscapeMustache does not escape these characters: & \ " < > '
+  class NoEscapeMustache < Mustache
+    # Disabling this cop because this is the function we need to override
+    # rubocop:disable MethodName
+    def escapeHTML(str)
+      str
+    end
+  end
+
   # Processes the mustache templates and injects new keys into the configuration
   #
   # @return [Hash] Hash containing the updated configuration
@@ -17,7 +26,11 @@ module EnvironmentConfigTransmogrifier
     # iterate through templates
     environment_templates.each do |key, template|
       # generate value from template
-      value = YAML.load(Mustache.render("{{=(( ))=}}#{template}", input_hash))
+      begin
+        value = YAML.load(NoEscapeMustache.render("{{=(( ))=}}#{template}", input_hash))
+      rescue => e
+        raise LoadYamlFromMustacheError "Could not load config key '#{key}': #{e.message}"
+      end
       # inject value in huge json
       inject_value(base_config, key.split('.'), value)
     end
