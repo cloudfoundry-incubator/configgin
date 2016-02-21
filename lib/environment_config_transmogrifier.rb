@@ -1,5 +1,6 @@
 require 'yaml'
 require 'mustache'
+require 'shellwords'
 
 # EnvironmentConfigTransmogrifier uses environment variables to generate config values
 # for specific keys.
