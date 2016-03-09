@@ -30,7 +30,7 @@ module EnvironmentConfigTransmogrifier
       begin
         value = YAML.load(NoEscapeMustache.render("{{=(( ))=}}#{template}", input_hash))
       rescue => e
-        raise LoadYamlFromMustacheError "Could not load config key '#{key}': #{e.message}"
+        raise LoadYamlFromMustacheError, "Could not load config key '#{key}': #{e.message}"
       end
       # inject value in huge json
       inject_value(base_config, key.split('.'), value)
