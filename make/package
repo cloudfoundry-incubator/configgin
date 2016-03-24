@@ -1,8 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -e
+set -o errexit
 
-if [ "$APP_VERSION" == "" ] ; then
+GIT_ROOT=${GIT_ROOT:-$(git rev-parse --show-toplevel)}
+
+. ${GIT_ROOT}/make/include/versioning
+
+set -o errexit  # Unset by side-effect in sourced script
+
+if test -z "${APP_VERSION}"; then
 	echo "APP_VERSION not set, aborting. Please call this from make."
 	exit 1
 fi

@@ -26,4 +26,4 @@ lint: vendor/sentinel
 	bundle exec rubocop --fail-level=error
 
 dist:
-	/usr/bin/env APP_VERSION=$(APP_VERSION) ./package.sh
+	${GIT_ROOT}/make/package
