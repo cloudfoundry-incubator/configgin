@@ -1,5 +1,7 @@
 #!/usr/bin/env make
 
+GIT_ROOT:=$(shell git rev-parse --show-toplevel)
+
 .PHONY: install test dist
 
 all: lint test dist
