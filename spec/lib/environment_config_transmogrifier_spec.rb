@@ -90,5 +90,26 @@ describe EnvironmentConfigTransmogrifier do
       expect(new_config['properties']['parent_key']['child_key']['grandchild_key']).not_to eq 0
       expect(new_config['properties']['parent_key']['child_key']['grandchild_key']).to eq '0'
     end
+
+    it 'should read secrets and use them over ENV' do
+      # Arrange
+      environment_templates = {
+        'properties.parent_key.child_key.grandchild_key' => '((MY_FOO_VAR))'
+      }
+      ENV['MY_FOO_VAR'] = 'bar'
+
+      Dir.mktmpdir do |secrets|
+        f = File.new(File.join(secrets, 'MY_FOO_VAR'), 'w')
+        f.write('BIG')
+        f.close
+
+        # Act
+        new_config = EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates,
+                                                                  secrets: secrets)
+
+        # Assert
+        expect(new_config['properties']['parent_key']['child_key']['grandchild_key']).to eq 'BIG'
+      end
+    end
   end
 end

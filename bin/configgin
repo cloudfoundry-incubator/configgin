@@ -30,6 +30,7 @@ end
 base_config = JSON.load(File.read(options[:base]))
 templates = YAML.load_file(options[:env2conf])
 
-bosh_spec = EnvironmentConfigTransmogrifier.transmogrify(base_config, templates)
+bosh_spec = EnvironmentConfigTransmogrifier.transmogrify(base_config, templates,
+                                                         secrets: '/etc/secrets')
 
 Generate.generate(bosh_spec, options[:input], options[:output])
