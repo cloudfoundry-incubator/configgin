@@ -19,8 +19,8 @@ vendor/sentinel: Gemfile Gemfile.lock
 	bundle package
 	touch $@
 
-test: vendor/sentinel
-	bundle exec rspec $(RSPEC_ARGS)
+test:
+	${GIT_ROOT}/make/test
 
 lint:
 	${GIT_ROOT}/make/lint
