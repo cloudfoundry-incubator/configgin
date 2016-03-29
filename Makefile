@@ -22,8 +22,8 @@ vendor/sentinel: Gemfile Gemfile.lock
 test: vendor/sentinel
 	bundle exec rspec $(RSPEC_ARGS)
 
-lint: vendor/sentinel
-	bundle exec rubocop --fail-level=error
+lint:
+	${GIT_ROOT}/make/lint
 
 dist:
 	${GIT_ROOT}/make/package
