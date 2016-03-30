@@ -41,7 +41,7 @@ module EnvironmentConfigTransmogrifier
     base_config
   end
 
-  def self.extendReplace(hash,path)
+  def self.extendReplace(hash, path)
     # This code assumes that 'path' points to a directory of files.
     # The name of each file is the key into the hash, and the contents
     # of the file are the value to enter, as-is. The order of the
