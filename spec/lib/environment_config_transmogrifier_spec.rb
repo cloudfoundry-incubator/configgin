@@ -114,10 +114,8 @@ describe EnvironmentConfigTransmogrifier do
 
     it 'should ignore a secrets file' do
       # Arrange
-      environment_templates = {
-        'properties.parent_key.child_key.grandchild_key' => '((MY_FOO_VAR))'
-      }
-      ENV['MY_FOO_VAR'] = 'bar'
+      allow(EnvironmentConfigTransmogrifier).to receive (:extendReplace) {}
+      environment_templates = {}
 
       Dir.mktmpdir do |tmp|
         secrets = File.join(tmp, 'MY_FOO_VAR')
@@ -126,11 +124,23 @@ describe EnvironmentConfigTransmogrifier do
         f.close
 
         # Act
-        new_config = EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates,
-                                                                  secrets: secrets)
-        # Assert
-        expect(new_config['properties']['parent_key']['child_key']['grandchild_key']).to eq 'bar'
+        EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates,
+                                                     secrets: secrets)
+        # Asserts
+        expect(EnvironmentConfigTransmogrifier).to receive(:extendReplace).exactly(0).times
       end
+    end
+
+    it 'should ignore a nil secrets' do
+      # Arrange
+      allow(EnvironmentConfigTransmogrifier).to receive (:extendReplace) {}
+      environment_templates = {}
+
+      # Act
+      EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates,
+                                                   secrets: nil)
+      # Asserts
+      expect(EnvironmentConfigTransmogrifier).to receive(:extendReplace).exactly(0).times
     end
   end
 end
