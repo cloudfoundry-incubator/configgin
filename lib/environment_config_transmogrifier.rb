@@ -55,7 +55,7 @@ module EnvironmentConfigTransmogrifier
       # means that the values found in 'path' have priority over the
       # values already in the 'hash'. This is what we want for
       # '/etc/secrets'
-      hash[key] = value
+      hash[key.upcase.gsub('-','_')] = value
     end
   end
 
