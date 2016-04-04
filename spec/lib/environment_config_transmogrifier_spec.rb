@@ -90,5 +90,57 @@ describe EnvironmentConfigTransmogrifier do
       expect(new_config['properties']['parent_key']['child_key']['grandchild_key']).not_to eq 0
       expect(new_config['properties']['parent_key']['child_key']['grandchild_key']).to eq '0'
     end
+
+    it 'should read secrets directory and use them over ENV' do
+      # Arrange
+      environment_templates = {
+        'properties.parent_key.child_key.grandchild_key' => '((MY_FOO_VAR))'
+      }
+      ENV['MY_FOO_VAR'] = 'bar'
+
+      Dir.mktmpdir do |secrets|
+        f = File.new(File.join(secrets, 'MY_FOO_VAR'), 'w')
+        f.write('BIG')
+        f.close
+
+        # Act
+        new_config = EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates,
+                                                                  secrets: secrets)
+
+        # Assert
+        expect(new_config['properties']['parent_key']['child_key']['grandchild_key']).to eq 'BIG'
+      end
+    end
+
+    it 'should ignore a secrets file' do
+      # Arrange
+      allow(EnvironmentConfigTransmogrifier).to receive (:extendReplace) {}
+      environment_templates = {}
+
+      Dir.mktmpdir do |tmp|
+        secrets = File.join(tmp, 'MY_FOO_VAR')
+        f = File.new(secrets, 'w')
+        f.write('BIG')
+        f.close
+
+        # Act
+        EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates,
+                                                     secrets: secrets)
+        # Asserts
+        expect(EnvironmentConfigTransmogrifier).to receive(:extendReplace).exactly(0).times
+      end
+    end
+
+    it 'should ignore a nil secrets' do
+      # Arrange
+      allow(EnvironmentConfigTransmogrifier).to receive (:extendReplace) {}
+      environment_templates = {}
+
+      # Act
+      EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates,
+                                                   secrets: nil)
+      # Asserts
+      expect(EnvironmentConfigTransmogrifier).to receive(:extendReplace).exactly(0).times
+    end
   end
 end

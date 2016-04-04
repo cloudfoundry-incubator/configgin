@@ -17,9 +17,11 @@ module EnvironmentConfigTransmogrifier
   # Processes the mustache templates and injects new keys into the configuration
   #
   # @return [Hash] Hash containing the updated configuration
-  def self.transmogrify(base_config, environment_templates)
+  def self.transmogrify(base_config, environment_templates, secrets: nil)
     # build input hash for mustache
     input_hash = ENV.to_hash
+
+    extendReplace(input_hash, secrets) if secrets && File.directory?(secrets)
 
     # we may need to process the input hash:
     # deal with service discovery env vars, secrets, etc.
@@ -37,6 +39,24 @@ module EnvironmentConfigTransmogrifier
     end
 
     base_config
+  end
+
+  def self.extendReplace(hash, path)
+    # This code assumes that 'path' points to a directory of files.
+    # The name of each file is the key into the hash, and the contents
+    # of the file are the value to enter, as-is. The order of the
+    # files in the directory does not matter.
+    Dir.glob(File.join(path, '*')).each do |file|
+      key   = File.basename(file)
+      value = File.read(file)
+
+      # Write the collected information to the hash. This will
+      # overwrite, i.e. replace an existing value for that name. This
+      # means that the values found in 'path' have priority over the
+      # values already in the 'hash'. This is what we want for
+      # '/etc/secrets'
+      hash[key.upcase.gsub('-','_')] = value
+    end
   end
 
   def self.inject_value(hash, key_grams, value)
