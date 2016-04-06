@@ -1,7 +1,7 @@
 # configgin
 
-A simple cli app in ruby to generate configurations using bosh erb templates and
-a bosh spec, but also using configurations based on environment variables,
+A simple cli app in Ruby to generate configurations using [BOSH](https://bosh.io) ERB templates and
+a BOSH spec, but also using configurations based on environment variables,
 processed using a set of templates.
 
 ## Usage
