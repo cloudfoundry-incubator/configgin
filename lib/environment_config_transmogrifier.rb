@@ -21,10 +21,11 @@ module EnvironmentConfigTransmogrifier
     # build input hash for mustache
     input_hash = ENV.to_hash
 
+    # load secrets
     extendReplace(input_hash, secrets) if secrets && File.directory?(secrets)
 
-    # we may need to process the input hash:
-    # deal with service discovery env vars, secrets, etc.
+    # remove empty values
+    input_hash.reject! { |k, v| v.nil? || v.empty? }
 
     # iterate through templates
     environment_templates.each do |key, template|
