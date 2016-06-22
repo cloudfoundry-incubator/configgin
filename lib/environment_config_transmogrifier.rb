@@ -75,7 +75,7 @@ module EnvironmentConfigTransmogrifier
     # error out if we're trying to override
     # an existing value that's not a hash
     unless hash[key_grams[0]].is_a?(Hash)
-      raise NonHashValueOverride, 'Refusing to override non-hash value.'
+      raise NonHashValueOverride, "Refusing to override non-hash value: #{key_grams}"
     end
     # keep going deeper
     inject_value(hash[key_grams[0]], key_grams.drop(1), value)
