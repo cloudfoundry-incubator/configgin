@@ -31,7 +31,8 @@ describe EnvironmentConfigTransmogrifier do
       # Assert
       expect {
         EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
-      }.to(raise_exception(NonHashValueOverride))
+      }.to(raise_exception(NonHashValueOverride, "Refusing to override non-hash value: 'non_hash_key.error' - " \
+                                                 "Complete key: 'properties.non_hash_key.error'"))
     end
 
     it 'should inject a configuration value' do
