@@ -28,7 +28,7 @@ module EnvironmentConfigTransmogrifier
     input_hash.reject! { |k, v| v.nil? || v.empty? }
 
     # iterate through templates
-    environment_templates.each do |key, template|
+    environment_templates.sort.each do |key, template|
       # generate value from template
       begin
         value = YAML.load(NoEscapeMustache.render("{{=(( ))=}}#{template}", input_hash))
@@ -76,7 +76,7 @@ module EnvironmentConfigTransmogrifier
     # an existing value that's not a hash
     unless hash[key_grams[0]].is_a?(Hash)
       raise NonHashValueOverride, "Refusing to override non-hash value: '#{key_grams.join('.')}'" \
-                                  " - Complete key: '#{original_key}'"
+                                  " - Complete key: '#{original_key}' (is a #{hash[key_grams[0]].class})"
     end
     # keep going deeper
     inject_value(hash[key_grams[0]], key_grams.drop(1), value, original_key)

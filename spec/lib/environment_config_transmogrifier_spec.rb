@@ -36,6 +36,22 @@ describe EnvironmentConfigTransmogrifier do
                            "Complete key: 'properties.non_hash_key.error'"))
     end
 
+    it 'should apply values in sorted order' do
+      environment_templates = {
+        'properties.parent.child' => 123,
+        'properties.parent' => {}
+      }
+
+      expect {
+        EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
+      }.not_to(raise_exception)
+
+      # If this was _not_ applied in sorted order, the 'properties.parent' set
+      # would override the 'properties.parent.child' set and clear out the
+      # child value
+      expect(@base_config['properties']['parent']['child']).to eq 123
+    end
+
     it 'should inject a configuration value' do
       # Arrange
       environment_templates = {
