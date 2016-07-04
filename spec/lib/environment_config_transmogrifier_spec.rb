@@ -54,7 +54,7 @@ describe EnvironmentConfigTransmogrifier do
       environment_templates = {
         'properties.parent_key.child_key.grandchild_key' => '((MY_FOO_VAR))'
       }
-      ENV['MY_FOO_VAR'] = 'bar'
+      expect(ENV).to receive(:to_hash).and_return('MY_FOO_VAR' => 'bar')
 
       # Act
       new_config = EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
@@ -68,7 +68,7 @@ describe EnvironmentConfigTransmogrifier do
       environment_templates = {
         'properties.parent_key.child_key.grandchild_key' => '((MY_FOO_VAR))'
       }
-      ENV['MY_FOO_VAR'] = '0'
+      expect(ENV).to receive(:to_hash).and_return('MY_FOO_VAR' => '0')
 
       # Act
       new_config = EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
@@ -83,7 +83,7 @@ describe EnvironmentConfigTransmogrifier do
       environment_templates = {
         'properties.parent_key.child_key.grandchild_key' => "'((MY_FOO_VAR))'"
       }
-      ENV['MY_FOO_VAR'] = '0'
+      expect(ENV).to receive(:to_hash).and_return('MY_FOO_VAR' => '0')
 
       # Act
       new_config = EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
@@ -98,7 +98,7 @@ describe EnvironmentConfigTransmogrifier do
       environment_templates = {
         'properties.parent_key.child_key.grandchild_key' => '((MY_FOO_VAR))'
       }
-      ENV['MY_FOO_VAR'] = 'bar'
+      expect(ENV).to receive(:to_hash).and_return('MY_FOO_VAR' => 'bar')
 
       Dir.mktmpdir do |secrets|
         f = File.new(File.join(secrets, 'MY_FOO_VAR'), 'w')
@@ -116,7 +116,7 @@ describe EnvironmentConfigTransmogrifier do
 
     it 'should ignore a secrets file' do
       # Arrange
-      allow(EnvironmentConfigTransmogrifier).to receive (:extendReplace) {}
+      allow(EnvironmentConfigTransmogrifier).to receive(:extendReplace) {}
       environment_templates = {}
 
       Dir.mktmpdir do |tmp|
@@ -135,7 +135,7 @@ describe EnvironmentConfigTransmogrifier do
 
     it 'should ignore a nil secrets' do
       # Arrange
-      allow(EnvironmentConfigTransmogrifier).to receive (:extendReplace) {}
+      allow(EnvironmentConfigTransmogrifier).to receive(:extendReplace) {}
       environment_templates = {}
 
       # Act
@@ -143,6 +143,18 @@ describe EnvironmentConfigTransmogrifier do
                                                    secrets: nil)
       # Asserts
       expect(EnvironmentConfigTransmogrifier).to receive(:extendReplace).exactly(0).times
+    end
+
+    it 'should recursively resolve subtitutions' do
+      expect(ENV).to receive(:to_hash).and_return('FOO' => '((BAR))', 'BAR' => 'bbb')
+
+      environment_templates = {
+        'properties.key' => 'aaa((FOO))ccc'
+      }
+
+      new_config = EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
+
+      expect(new_config['properties']['key']).to eq 'aaabbbccc'
     end
   end
 end
