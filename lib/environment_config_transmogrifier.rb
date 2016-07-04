@@ -25,7 +25,7 @@ module EnvironmentConfigTransmogrifier
     extendReplace(input_hash, secrets) if secrets && File.directory?(secrets)
 
     # remove empty values
-    input_hash.reject! { |k, v| v.nil? || v.empty? }
+    input_hash.reject! { |_, v| v.nil? || v.empty? }
 
     # iterate through templates
     environment_templates.each do |key, value|
@@ -58,7 +58,7 @@ module EnvironmentConfigTransmogrifier
       # means that the values found in 'path' have priority over the
       # values already in the 'hash'. This is what we want for
       # '/etc/secrets'
-      hash[key.upcase.gsub('-','_')] = value
+      hash[key.upcase.tr('-', '_')] = value
     end
   end
 
