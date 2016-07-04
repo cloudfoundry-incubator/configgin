@@ -144,5 +144,20 @@ describe EnvironmentConfigTransmogrifier do
       # Asserts
       expect(EnvironmentConfigTransmogrifier).to receive(:extendReplace).exactly(0).times
     end
+
+    it 'should recursively resolve subtitutions' do
+      expect(ENV).to receive(:to_hash).and_return(
+        'FOO' => '((BAR))',
+        'BAR' => 'bbb'
+      )
+
+      environment_templates = {
+        'properties.key' => 'aaa((FOO))ccc'
+      }
+
+      new_config = EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
+
+      expect(new_config['properties']['key']).to eq 'aaabbbccc'
+    end
   end
 end

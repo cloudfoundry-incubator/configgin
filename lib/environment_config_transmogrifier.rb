@@ -28,12 +28,14 @@ module EnvironmentConfigTransmogrifier
     input_hash.reject! { |k, v| v.nil? || v.empty? }
 
     # iterate through templates
-    environment_templates.each do |key, template|
+    environment_templates.each do |key, value|
       # generate value from template
-      begin
-        value = YAML.load(NoEscapeMustache.render("{{=(( ))=}}#{template}", input_hash))
-      rescue => e
-        raise LoadYamlFromMustacheError, "Could not load config key '#{key}': #{e.message}"
+      while value.respond_to?(:include?) && value.include?('((')
+        begin
+          value = YAML.load(NoEscapeMustache.render("{{=(( ))=}}#{value}", input_hash))
+        rescue => e
+          raise LoadYamlFromMustacheError, "Could not load config key '#{key}': #{e.message}"
+        end
       end
       # inject value in huge json
       inject_value(base_config, key.split('.'), value, key)
