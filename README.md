@@ -34,3 +34,6 @@ If you don't want to redirect output you can specify an output file using --outp
 # Example of using input and output files with a template.
 configgin --input myjsondata.json --output output.yml --job a --role b --consul c template.yml.erb
 ```
+
+
+testing pr for CI /need to remove
