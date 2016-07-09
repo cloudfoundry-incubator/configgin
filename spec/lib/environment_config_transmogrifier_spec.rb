@@ -63,6 +63,20 @@ describe EnvironmentConfigTransmogrifier do
       expect(new_config['properties']['parent_key']['child_key']['grandchild_key']).to eq 'bar'
     end
 
+    it 'should process mustache templates with new lines are kept' do
+      # Arrange
+      environment_templates = {
+        'properties.parent_key.child_key.grandchild_key' => '((MY_FOO_VAR))'
+      }
+      expect(ENV).to receive(:to_hash).and_return('MY_FOO_VAR' => "bar\nfoo")
+
+      # Act
+      new_config = EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
+
+      # Assert
+      expect(new_config['properties']['parent_key']['child_key']['grandchild_key']).to eq "bar\nfoo"
+    end
+
     it 'should keep value type' do
       # Arrange
       environment_templates = {
