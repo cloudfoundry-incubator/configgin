@@ -32,7 +32,10 @@ module EnvironmentConfigTransmogrifier
       # generate value from template
       while value.respond_to?(:include?) && value.include?('((')
         begin
-          value = YAML.load(NoEscapeMustache.render("{{=(( ))=}}#{value}", input_hash))
+          mustache_value=NoEscapeMustache.render("{{=(( ))=}}#{value}", input_hash)
+          # replace new lines with double new lines for proper new-line YAML parsing
+          mustache_value=mustache_value.gsub("\n", "\n\n")
+          value = YAML.load(mustache_value)
         rescue => e
           raise LoadYamlFromMustacheError, "Could not load config key '#{key}': #{e.message}"
         end
