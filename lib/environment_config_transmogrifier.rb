@@ -30,21 +30,32 @@ module EnvironmentConfigTransmogrifier
     # iterate through templates
     environment_templates.each do |key, value|
       # generate value from template
-      while value.respond_to?(:include?) && value.include?('((')
-        begin
-          mustache_value=NoEscapeMustache.render("{{=(( ))=}}#{value}", input_hash)
-          # replace new lines with double new lines for proper new-line YAML parsing
-          mustache_value=mustache_value.gsub("\n", "\n\n")
-          value = YAML.load(mustache_value)
-        rescue => e
-          raise LoadYamlFromMustacheError, "Could not load config key '#{key}': #{e.message}"
-        end
+
+      # we need to process the template at least once, even if it doesn't
+      # actually contain a mustache template, to get value types correctly;
+      # by default, all values are strings, because they come from the environment
+      # we need to unmarshall them using YAML.load
+      loop do
+        value = processMustacheTemplate(value, input_hash)
+        break unless value.respond_to?(:include?) && value.include?('((')
       end
+
       # inject value in huge json
       inject_value(base_config, key.split('.'), value, key)
     end
 
     base_config
+  end
+
+  def self.processMustacheTemplate(value, input_hash)
+    begin
+      mustache_value=NoEscapeMustache.render("{{=(( ))=}}#{value}", input_hash)
+      # replace new lines with double new lines for proper new-line YAML parsing
+      mustache_value="#{mustache_value}".gsub("\n", "\n\n")
+      YAML.load(mustache_value)
+    rescue => e
+      raise LoadYamlFromMustacheError, "Could not load config key '#{key}': #{e.message}"
+    end
   end
 
   def self.extendReplace(hash, path)
