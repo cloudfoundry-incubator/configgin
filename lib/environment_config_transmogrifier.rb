@@ -54,7 +54,7 @@ module EnvironmentConfigTransmogrifier
       mustache_value="#{mustache_value}".gsub("\n", "\n\n")
       YAML.load(mustache_value)
     rescue => e
-      raise LoadYamlFromMustacheError, "Could not load config key '#{key}': #{e.message}"
+      raise LoadYamlFromMustacheError, "Could not load config key '#{value}': #{e.message}"
     end
   end
 
