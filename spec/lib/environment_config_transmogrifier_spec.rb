@@ -107,6 +107,21 @@ describe EnvironmentConfigTransmogrifier do
       expect(new_config['properties']['parent_key']['child_key']['grandchild_key']).to eq 'f(bar)'
     end
 
+    it 'should not handle quoted references as verbatim strings' do
+      # Arrange
+      environment_templates = {
+        'properties.parent_key.child_key.grandchild_key' => 'f(("("))((MY_FOO_VAR))((")"))'
+      }
+      expect(ENV).to receive(:to_hash).and_return('MY_FOO_VAR' => 'bar')
+      # Act
+      # Assert
+      expect {
+        new_config = EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
+        expect(new_config['properties']['parent_key']['child_key']['grandchild_key']).to eq 'f(bar)'
+      }.to(raise_exception(LoadYamlFromMustacheError,
+                           /Could not load config key 'properties.parent_key.child_key.grandchild_key'.*Illegal content in tag/))
+    end
+
     it 'should process mustache templates with new lines are kept' do
       # Arrange
       environment_templates = {

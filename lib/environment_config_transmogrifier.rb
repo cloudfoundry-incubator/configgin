@@ -58,8 +58,7 @@ module EnvironmentConfigTransmogrifier
       lines = e.message.split(/\n/)
       if lines.size >= 4 && lines[0]["Illegal content in tag"] && lines[1]["Line "]
         actual_line = lines[2]
-        m = Regexp.new("\\A" + Regexp.escape(delimiter)).match(actual_line)
-        # m = /\A(\s+\{\{=\(\( \)\)=\}\})/.match(actual_line)
+        m = Regexp.new("\\A\\s+" + Regexp.escape(delimiter)).match(actual_line)
         leading_junk = m ? m[0].size : 0
         caret_line = lines[3]
         caret_pos = caret_line.index("^")
