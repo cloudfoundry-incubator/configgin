@@ -77,6 +77,24 @@ describe EnvironmentConfigTransmogrifier do
                            /Could not load config key.*Illegal content in tag/))
     end
 
+    it 'should not show values on error' do
+      # Arrange
+      environment_templates = {
+        'properties.parent_key.child_key.grandchild_key' => 'f(((MY_FOO_VAR))); CLASSIFIED SECRET'
+      }
+      # Act
+      # Assert
+      expect {
+      begin
+        EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
+      rescue LoadYamlFromMustacheError => e
+        expect(e.message).not_to match(/CLASSIFIED SECRET/)
+        raise
+      end
+      }.to(raise_exception(LoadYamlFromMustacheError,
+                           /Could not load config key 'properties.parent_key.child_key.grandchild_key'/))
+    end
+
     it 'should support changing templates inline' do
       # Arrange
       environment_templates = {
