@@ -85,12 +85,12 @@ describe EnvironmentConfigTransmogrifier do
       # Act
       # Assert
       expect {
-      begin
-        EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
-      rescue LoadYamlFromMustacheError => e
-        expect(e.message).not_to match(/CLASSIFIED SECRET/)
-        raise
-      end
+        begin
+          EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
+        rescue LoadYamlFromMustacheError => e
+          expect(e.message).not_to match(/CLASSIFIED SECRET/)
+          raise
+        end
       }.to(raise_exception(LoadYamlFromMustacheError,
                            /Could not load config key 'properties.parent_key.child_key.grandchild_key'/))
     end
@@ -115,11 +115,12 @@ describe EnvironmentConfigTransmogrifier do
       expect(ENV).to receive(:to_hash).and_return('MY_FOO_VAR' => 'bar')
       # Act
       # Assert
-      expect {
-        new_config = EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
-        expect(new_config['properties']['parent_key']['child_key']['grandchild_key']).to eq 'f(bar)'
-      }.to(raise_exception(LoadYamlFromMustacheError,
-                           /Could not load config key 'properties.parent_key.child_key.grandchild_key'.*Illegal content in tag/))
+      expect { EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates) }
+        .to raise_exception(LoadYamlFromMustacheError) do |e|
+          prefix = "Could not load config key 'properties.parent_key.child_key.grandchild_key'"
+          expect(e.message).to start_with prefix
+          expect(e.message).to include 'Illegal content in tag'
+        end
     end
 
     it 'should process mustache templates with new lines are kept' do
