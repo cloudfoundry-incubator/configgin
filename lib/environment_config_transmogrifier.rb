@@ -36,7 +36,7 @@ module EnvironmentConfigTransmogrifier
       # by default, all values are strings, because they come from the environment
       # we need to unmarshall them using YAML.load
       loop do
-        value = processMustacheTemplate(value, input_hash)
+        value = processMustacheTemplate(value, input_hash, key)
         break unless value.respond_to?(:include?) && value.include?('((')
       end
 
@@ -47,15 +47,32 @@ module EnvironmentConfigTransmogrifier
     base_config
   end
 
-  def self.processMustacheTemplate(value, input_hash)
+  def self.processMustacheTemplate(value, input_hash, key)
+    delimiter = '{{=(( ))=}}'
     begin
-      mustache_value=NoEscapeMustache.render("{{=(( ))=}}#{value}", input_hash)
+      mustache_value = NoEscapeMustache.render("#{delimiter}#{value}", input_hash)
       # replace new lines with double new lines for proper new-line YAML parsing
-      mustache_value="#{mustache_value}".gsub("\n", "\n\n")
+      mustache_value = mustache_value.to_s.gsub("\n", "\n\n")
       YAML.load(mustache_value)
     rescue => e
-      raise LoadYamlFromMustacheError, "Could not load config key '#{key}': #{e.message}"
+      msg = mustacheMessageFromError(e)
+      raise LoadYamlFromMustacheError, "Could not load config key '#{key}': #{msg}"
     end
+  end
+
+  def self.mustacheMessageFromError(e)
+    lines = e.message.split(/\n/)
+    return 'No reason for failure given by mustache library' if lines.empty?
+    return lines.first if lines.size < 4
+
+    caret_line = lines[3]
+    caret_pos = caret_line.index('^')
+    return lines[0] + '.' unless caret_pos
+
+    delimiter = '{{=(( ))=}}'
+    actual_line = lines[2]
+    leading_junk = actual_line.lstrip.start_with?(delimiter) ? actual_line.index(delimiter) : 0
+    lines[0] + ": Error at or near position #{caret_pos - leading_junk} of template value."
   end
 
   def self.extendReplace(hash, path)
