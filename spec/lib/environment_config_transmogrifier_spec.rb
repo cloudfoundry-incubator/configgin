@@ -45,7 +45,7 @@ describe EnvironmentConfigTransmogrifier do
       new_config = EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
 
       # Assert
-      expect(new_config['bootstrap'].to be true
+      expect(new_config['bootstrap']).to be true
     end
 
     it 'should inject bootstrap for index of primary component' do
@@ -58,7 +58,7 @@ describe EnvironmentConfigTransmogrifier do
       new_config = EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
 
       # Assert
-      expect(new_config['bootstrap'].to be true
+      expect(new_config['bootstrap']).to be true
     end
 
     it 'should inject bootstrap for index of non-primary component' do
@@ -71,7 +71,7 @@ describe EnvironmentConfigTransmogrifier do
       new_config = EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
 
       # Assert
-      expect(new_config['bootstrap'].to be false
+      expect(new_config['bootstrap']).to be false
     end
 
     it 'should inject a configuration value' do
