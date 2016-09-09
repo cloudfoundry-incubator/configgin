@@ -37,6 +37,43 @@ describe EnvironmentConfigTransmogrifier do
                            "Complete key: 'properties.non_hash_key.error'"))
     end
 
+    it 'should inject bootstrap without index' do
+      # Arrange
+      environment_templates = {}
+
+      # Act
+      new_config = EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
+
+      # Assert
+      expect(new_config['bootstrap']).to be true
+    end
+
+    it 'should inject bootstrap for index of primary component' do
+      # Arrange
+      environment_templates = {
+        'index' => 0
+      }
+
+      # Act
+      new_config = EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
+
+      # Assert
+      expect(new_config['bootstrap']).to be true
+    end
+
+    it 'should inject bootstrap for index of non-primary component' do
+      # Arrange
+      environment_templates = {
+        'index' => 1
+      }
+
+      # Act
+      new_config = EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
+
+      # Assert
+      expect(new_config['bootstrap']).to be false
+    end
+
     it 'should inject a configuration value' do
       # Arrange
       environment_templates = {
