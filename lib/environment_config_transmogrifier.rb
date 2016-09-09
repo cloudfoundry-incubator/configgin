@@ -44,6 +44,8 @@ module EnvironmentConfigTransmogrifier
       inject_value(base_config, key.split('.'), value, key)
     end
 
+    base_config['bootstrap'] = (base_config['index'] || 0) == 0
+
     base_config
   end
 
