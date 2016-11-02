@@ -15,7 +15,7 @@ describe EnvironmentConfigTransmogrifier do
           'parent_key' => {
             'child_key' => {
             }
-          },
+          }
         },
         'networks' => {
           'default' => {}
