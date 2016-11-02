@@ -10,6 +10,7 @@ describe EnvironmentConfigTransmogrifier do
           'templates' => []
         },
         'properties' => {
+          'nil_value' => nil,
           'non_hash_key' => 0,
           'parent_key' => {
             'child_key' => {
@@ -33,8 +34,19 @@ describe EnvironmentConfigTransmogrifier do
       expect {
         EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
       }.to(raise_exception(NonHashValueOverride,
-                           "Refusing to override non-hash value: 'non_hash_key.error' - " \
+                           "Refusing to override non-hash value 0 with false: 'non_hash_key.error' - " \
                            "Complete key: 'properties.non_hash_key.error'"))
+    end
+
+    it 'should allow overriding nil values' do
+      environment_templates = {
+        'properties.nil_value' => '((TEST_ENV_VAR))'
+      }
+      expect(ENV).to receive(:to_hash).and_return('TEST_ENV_VAR' => 'hello')
+
+      new_config = EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
+
+      expect(new_config['properties']['nil_value']).to eq 'hello'
     end
 
     it 'should inject bootstrap without index' do
