@@ -39,7 +39,7 @@ Usage: configgin [options]
         "acceptance_tests": {
             "include_services": false,
             "include_sso": false,
-            "nodes": 2,
+            "nodes": 2
         }
     }
 }  

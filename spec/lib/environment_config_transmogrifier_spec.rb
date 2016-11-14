@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'environment_config_transmogrifier'
+require 'exceptions'
 
 describe EnvironmentConfigTransmogrifier do
   context 'with a config_transmogrifier' do
@@ -9,6 +10,7 @@ describe EnvironmentConfigTransmogrifier do
           'templates' => []
         },
         'properties' => {
+          'nil_value' => nil,
           'non_hash_key' => 0,
           'parent_key' => {
             'child_key' => {
@@ -32,8 +34,56 @@ describe EnvironmentConfigTransmogrifier do
       expect {
         EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
       }.to(raise_exception(NonHashValueOverride,
-                           "Refusing to override non-hash value: 'non_hash_key.error' - " \
+                           "Refusing to override non-hash value 0 with false: 'non_hash_key.error' - " \
                            "Complete key: 'properties.non_hash_key.error'"))
+    end
+
+    it 'should allow overriding nil values' do
+      environment_templates = {
+        'properties.nil_value' => '((TEST_ENV_VAR))'
+      }
+      expect(ENV).to receive(:to_hash).and_return('TEST_ENV_VAR' => 'hello')
+
+      new_config = EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
+
+      expect(new_config['properties']['nil_value']).to eq 'hello'
+    end
+
+    it 'should inject bootstrap without index' do
+      # Arrange
+      environment_templates = {}
+
+      # Act
+      new_config = EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
+
+      # Assert
+      expect(new_config['bootstrap']).to be true
+    end
+
+    it 'should inject bootstrap for index of primary component' do
+      # Arrange
+      environment_templates = {
+        'index' => 0
+      }
+
+      # Act
+      new_config = EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
+
+      # Assert
+      expect(new_config['bootstrap']).to be true
+    end
+
+    it 'should inject bootstrap for index of non-primary component' do
+      # Arrange
+      environment_templates = {
+        'index' => 1
+      }
+
+      # Act
+      new_config = EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
+
+      # Assert
+      expect(new_config['bootstrap']).to be false
     end
 
     it 'should inject a configuration value' do
@@ -61,6 +111,79 @@ describe EnvironmentConfigTransmogrifier do
 
       # Assert
       expect(new_config['properties']['parent_key']['child_key']['grandchild_key']).to eq 'bar'
+    end
+
+    it 'should error on triple-paren' do
+      # Arrange
+      environment_templates = {
+        'properties.parent_key.child_key.grandchild_key' => 'f(((MY_FOO_VAR)))'
+      }
+      # Act
+      # Assert
+      expect {
+        EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
+      }.to(raise_exception(LoadYamlFromMustacheError,
+                           /Could not load config key.*Illegal content in tag/))
+    end
+
+    it 'should not show values on error' do
+      # Arrange
+      environment_templates = {
+        'properties.parent_key.child_key.grandchild_key' => 'f(((MY_FOO_VAR))); CLASSIFIED SECRET'
+      }
+      # Act
+      # Assert
+      expect {
+        begin
+          EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
+        rescue LoadYamlFromMustacheError => e
+          expect(e.message).not_to match(/CLASSIFIED SECRET/)
+          raise
+        end
+      }.to(raise_exception(LoadYamlFromMustacheError,
+                           /Could not load config key 'properties.parent_key.child_key.grandchild_key'/))
+    end
+
+    it 'should support changing templates inline' do
+      # Arrange
+      environment_templates = {
+        'properties.parent_key.child_key.grandchild_key' => '((={{ }}=))f({{MY_FOO_VAR}})'
+      }
+      expect(ENV).to receive(:to_hash).and_return('MY_FOO_VAR' => 'bar')
+      # Act
+      new_config = EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
+      # Assert
+      expect(new_config['properties']['parent_key']['child_key']['grandchild_key']).to eq 'f(bar)'
+    end
+
+    it 'should not handle quoted references as verbatim strings' do
+      # Arrange
+      environment_templates = {
+        'properties.parent_key.child_key.grandchild_key' => 'f(("("))((MY_FOO_VAR))((")"))'
+      }
+      expect(ENV).to receive(:to_hash).and_return('MY_FOO_VAR' => 'bar')
+      # Act
+      # Assert
+      expect { EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates) }
+        .to raise_exception(LoadYamlFromMustacheError) do |e|
+          prefix = "Could not load config key 'properties.parent_key.child_key.grandchild_key'"
+          expect(e.message).to start_with prefix
+          expect(e.message).to include 'Illegal content in tag'
+        end
+    end
+
+    it 'should process mustache templates with new lines are kept' do
+      # Arrange
+      environment_templates = {
+        'properties.parent_key.child_key.grandchild_key' => '((MY_FOO_VAR))'
+      }
+      expect(ENV).to receive(:to_hash).and_return('MY_FOO_VAR' => "bar\nfoo")
+
+      # Act
+      new_config = EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
+
+      # Assert
+      expect(new_config['properties']['parent_key']['child_key']['grandchild_key']).to eq "bar\nfoo"
     end
 
     it 'should keep value type' do
