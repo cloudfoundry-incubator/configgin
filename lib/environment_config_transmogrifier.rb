@@ -5,6 +5,8 @@ require 'shellwords'
 # EnvironmentConfigTransmogrifier uses environment variables to generate config values
 # for specific keys.
 module EnvironmentConfigTransmogrifier
+  @@memoize_mustache = {}
+
   # NoEscapeMustache does not escape these characters: & \ " < > '
   class NoEscapeMustache < Mustache
     # Disabling this cop because this is the function we need to override
@@ -50,12 +52,16 @@ module EnvironmentConfigTransmogrifier
   end
 
   def self.processMustacheTemplate(value, input_hash, key)
+    val = @@memoize_mustache.fetch(value, {})[input_hash]
+    return val if val
+
     delimiter = '{{=(( ))=}}'
     begin
       mustache_value = NoEscapeMustache.render("#{delimiter}#{value}", input_hash)
       # replace new lines with double new lines for proper new-line YAML parsing
       mustache_value = mustache_value.to_s.gsub("\n", "\n\n")
-      YAML.load(mustache_value)
+      @@memoize_mustache[value] ||= {}
+      @@memoize_mustache[value][input_hash] = YAML.load(mustache_value)
     rescue => e
       msg = mustacheMessageFromError(e)
       raise LoadYamlFromMustacheError, "Could not load config key '#{key}': #{msg}"
