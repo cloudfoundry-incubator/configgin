@@ -27,16 +27,23 @@ rescue ArgMissingError => e
   exit(1)
 end
 
-base_config = JSON.load(File.read(options[:base]))
+jobs = JSON.load(File.read(options[:jobs]))
 templates = YAML.load_file(options[:env2conf])
 
-begin
-  bosh_spec = EnvironmentConfigTransmogrifier.transmogrify(base_config, templates,
-                                                           secrets: '/etc/secrets')
-rescue NonHashValueOverride => e
-  STDERR.puts e.to_s
-  STDERR.puts "Error generating #{options[:output]} from #{options[:input]}"
-  exit 1
-end
+jobs.each do |job, job_config|
+  base_config = JSON.load(File.read(job_config['base']))
 
-Generate.generate(bosh_spec, options[:input], options[:output])
+  job_config['files'].each do |infile, outfile|
+    begin
+      bosh_spec = EnvironmentConfigTransmogrifier.transmogrify(base_config,
+                                                               templates,
+                                                               secrets: '/etc/secrets')
+    rescue NonHashValueOverride => e
+      STDERR.puts e.to_s
+      STDERR.puts "Error generating #{job}: #{outfile} from #{infile}"
+      exit 1
+    end
+
+    Generate.generate(bosh_spec, infile, outfile)
+  end
+end

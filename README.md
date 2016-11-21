@@ -8,9 +8,7 @@ processed using a set of templates.
 
 ```
 Usage: configgin [options]
-    -i, --input-erb file             Input erb template
-    -o, --output file                Output to file
-    -b, --base file                  Base configuration JSON
+    -j, --jobs file                  Job configuration JSON
     -e, --env2conf file              Environment to configuration templates YAML
 ```
 
@@ -43,6 +41,18 @@ Usage: configgin [options]
 }  
 ```
 
+### Example job configuration file (job_config.json)
+```json
+{
+  "job_name": {
+    "base": "/tmp/bosh_spec.json",
+    "files": {
+      "/tmp/my_template.erb": "/tmp/output_file"
+    }
+  }
+}
+```
+
 ### Example environment variable template file (env2.conf.yml)
 ```yaml
 ---
@@ -59,8 +69,6 @@ Hello, this is the users property: <%= p("uaa.scim.users") %>
 ```bash
 TEST_VAR=foo
 configgin \
-  -b ~/tmp/bosh_spec.json \
   -e ~/tmp/env2.conf.yml \
-  -i ~/tmp/my_template.erb \
-  -o ~/tmp/output_file
+  -j ~/tmp/job_config.json
 ```

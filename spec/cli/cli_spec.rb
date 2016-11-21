@@ -10,8 +10,7 @@ describe Cli do
 
   context 'with a full config' do
     let(:config) {
-      { input: '/tmp/in.file', output: '/tmp/out.file',
-        base: '/tmp/base.json', env2conf: '/tmp/templates.tml' }
+      { jobs: '/tmp/in.file', env2conf: '/tmp/templates.tml' }
     }
 
     it 'should accept correct arrangements of arguments' do
@@ -20,25 +19,11 @@ describe Cli do
       }.not_to raise_error
     end
 
-    it 'should fail if input is missing' do
-      config.delete(:input)
+    it 'should fail if jobs is missing' do
+      config.delete(:jobs)
       expect {
         Cli.check_opts(config)
-      }.to raise_error(ArgMissingError, 'input')
-    end
-
-    it 'should fail if output is missing' do
-      config.delete(:output)
-      expect {
-        Cli.check_opts(config)
-      }.to raise_error(ArgMissingError, 'output')
-    end
-
-    it 'should fail if base is missing' do
-      config.delete(:base)
-      expect {
-        Cli.check_opts(config)
-      }.to raise_error(ArgMissingError, 'base')
+      }.to raise_error(ArgMissingError, 'jobs')
     end
 
     it 'should fail if templates is missing' do
