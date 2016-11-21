@@ -2,3 +2,4 @@
 /vendor/cache/
 /vendor/sentinel
 /.bundle/
+configgin.go
