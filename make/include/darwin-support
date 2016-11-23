@@ -5,11 +5,12 @@ set -o errexit
 if [ "$(uname)" == "Darwin" ]; then
     DOCKER_RUNTIME=${DOCKER_RUNTIME:-'helioncf/hcf-pipeline-ruby-bosh'}
     GIT_ROOT=${GIT_ROOT:-$(git rev-parse --show-toplevel)}
+    WORK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
     docker run \
        --rm \
        --volume ${GIT_ROOT}:${GIT_ROOT} \
-       --workdir ${GIT_ROOT} \
+       --workdir ${WORK_DIR} \
        --entrypoint bash \
        ${DOCKER_RUNTIME} \
        -l -c "export RBENV_VERSION=2.1.7 && ${BASH_SOURCE[1]}"
