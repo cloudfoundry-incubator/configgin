@@ -14,3 +14,6 @@ lint:
 
 dist:
 	${GIT_ROOT}/make/package
+
+clean:
+	rm -rf output
