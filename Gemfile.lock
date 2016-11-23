@@ -43,6 +43,3 @@ DEPENDENCIES
   mustache (~> 1.0)
   rspec
   rubocop
-
-BUNDLED WITH
-   1.12.0.pre.1
