@@ -3,7 +3,7 @@
 set -o errexit
 
 GIT_ROOT=${GIT_ROOT:-$(git rev-parse --show-toplevel)}
-
+. ${GIT_ROOT}/make/include/darwin-support
 . ${GIT_ROOT}/make/include/versioning
 
 set -o errexit  # Unset by side-effect in sourced script

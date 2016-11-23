@@ -2,5 +2,8 @@
 
 set -o errexit
 
+GIT_ROOT=${GIT_ROOT:-$(git rev-parse --show-toplevel)}
+. ${GIT_ROOT}/make/include/darwin-support
+
 bundle package
 bundle exec rubocop --fail-level=error
