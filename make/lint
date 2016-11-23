@@ -1,9 +1,9 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 set -o errexit
 
-GIT_ROOT=${GIT_ROOT:-$(git rev-parse --show-toplevel)}
-. ${GIT_ROOT}/make/include/darwin-support
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. ${SCRIPT_DIR}/include/darwin-support
 
 bundle package
 bundle exec rubocop --fail-level=error

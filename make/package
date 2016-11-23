@@ -2,9 +2,9 @@
 
 set -o errexit
 
-GIT_ROOT=${GIT_ROOT:-$(git rev-parse --show-toplevel)}
-. ${GIT_ROOT}/make/include/darwin-support
-. ${GIT_ROOT}/make/include/versioning
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. ${SCRIPT_DIR}/include/darwin-support
+. ${SCRIPT_DIR}/include/versioning
 
 set -o errexit  # Unset by side-effect in sourced script
 
