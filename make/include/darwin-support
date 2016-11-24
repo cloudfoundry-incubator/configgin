@@ -4,12 +4,20 @@ set -o errexit
 
 if [ "$(uname)" == "Darwin" ]; then
     DOCKER_RUNTIME=${DOCKER_RUNTIME:-'helioncf/hcf-pipeline-ruby-bosh'}
-    GIT_ROOT=${GIT_ROOT:-$(git rev-parse --show-toplevel)}
+
+    # We need to mount the enclosing repo in case we are just a submodule
+    # (still doesn't support being a nested submodule though)
+    ROOT=${PWD}
+    if [ -f .git ]; then cd ..; fi
+    GIT_ROOT=$(git rev-parse --show-toplevel)
+    cd ${ROOT}
+
+    WORK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
     docker run \
        --rm \
        --volume ${GIT_ROOT}:${GIT_ROOT} \
-       --workdir ${GIT_ROOT} \
+       --workdir ${WORK_DIR} \
        --entrypoint bash \
        ${DOCKER_RUNTIME} \
        -l -c "export RBENV_VERSION=2.1.7 && ${BASH_SOURCE[1]}"
