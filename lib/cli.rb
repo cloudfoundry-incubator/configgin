@@ -8,7 +8,7 @@ module Cli
   #
   # @param options [Hash] The options to check
   def self.check_opts(options)
-    [:input, :output, :base, :env2conf].each do |key|
+    [:jobs, :env2conf].each do |key|
       if options[key].nil? || options[key].empty?
         raise ArgMissingError, key.to_s
       end
@@ -23,23 +23,14 @@ module Cli
     OptionParser.new do |opts|
       opts.banner = 'Usage: configgin [options]'
 
-      # Input template file
-      opts.on('-i', '--input-erb file', 'Input erb template') do |i|
-        options[:input] = i
-      end
-
-      # Output file
-      opts.on('-o', '--output file', 'Output to file') do |o|
-        options[:output] = o
-      end
-
-      # Base config JSON file
-      opts.on('-b', '--base file', 'Base configuration JSON') do |b|
-        options[:base] = b
+      # Job definition file
+      opts.on('-j', '--jobs file', 'Job definitions') do |j|
+        options[:jobs] = j
       end
 
       # Environment to configuration templates file
-      opts.on('-e', '--env2conf file', 'Environment to configuration templates YAML') do |e|
+      opts.on('-e', '--env2conf file',
+              'Environment to configuration templates YAML') do |e|
         options[:env2conf] = e
       end
     end
