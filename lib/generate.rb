@@ -21,7 +21,7 @@ module Generate
       erb_template = ERB.new(File.read(input_file_path))
       erb_template.filename = input_file_path
     rescue Errno::ENOENT
-      raise "failed to read template file: #{template}"
+      raise "failed to read template file #{input_file_path}"
     end
 
     # Create a BOSH evaluation context
@@ -40,7 +40,7 @@ module Generate
       out_file.chmod(perms)
     rescue Errno::ENOENT, Errno::EACCES => e
       out_file = nil
-      raise "failed to open output file #{output}: #{e}"
+      raise "failed to open output file #{output_file_path}: #{e}"
     ensure
       out_file.close unless out_file.nil?
     end
