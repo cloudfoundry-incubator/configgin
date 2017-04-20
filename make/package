@@ -14,7 +14,7 @@ if test -z "${APP_VERSION}"; then
 fi
 
 app_name="${APP_VERSION}.linux-amd64"
-traveling_ruby="traveling-ruby-20141215-2.1.5-linux-x86_64.tar.gz"
+traveling_ruby="traveling-ruby-20170411-2.2.2-linux-x86_64.tar.gz"
 
 mkdir -p ./output/${app_name}/lib/app
 tar -c --exclude=output --exclude=.gitignore --exclude=.git ./ | tar -x -C ./output/${app_name}/lib/app
@@ -25,7 +25,7 @@ mkdir -p ./output/packaging
 	cd ./output
 	(
 		cd ./packaging
-		curl -sS -L -O --fail http://d6r77u77i8pq3.cloudfront.net/releases/${traveling_ruby}
+		curl -sS -L -O --fail https://storage.googleapis.com/pelerinul/${traveling_ruby}
 	)
 	mkdir -p ${app_name}/lib/ruby
 	tar -xzf packaging/${traveling_ruby} -C ${app_name}/lib/ruby
@@ -51,7 +51,7 @@ chmod +x ./output/${app_name}/configgin
 
 (
 	cd ./output/${app_name}/lib/app
-	BUNDLE_IGNORE_CONFIG=1 ../ruby/bin/bundle install --path ../vendor
+	BUNDLE_IGNORE_CONFIG=1 ../ruby/bin/ruby ../ruby/bin.real/bundle install --path ../vendor
 	rm -rf ../vendor/*/*/cache/*
 )
 
