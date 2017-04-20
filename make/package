@@ -51,7 +51,7 @@ chmod +x ./output/${app_name}/configgin
 
 (
 	cd ./output/${app_name}/lib/app
-BUNDLE_IGNORE_CONFIG=1 ../ruby/bin/ruby ../ruby/bin.real/bundle install --path ../vendor
+	BUNDLE_IGNORE_CONFIG=1 ../ruby/bin/ruby ../ruby/bin.real/bundle install --path ../vendor
 	rm -rf ../vendor/*/*/cache/*
 )
 
