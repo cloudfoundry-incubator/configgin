@@ -19,9 +19,6 @@ parser.parse!(ARGV)
 
 begin
   Cli.check_opts(options)
-rescue ArgConflictError => e
-  STDERR.puts("invalid arguments: #{e}")
-  exit(1)
 rescue ArgMissingError => e
   STDERR.puts("missing argument: #{e}")
   exit(1)
