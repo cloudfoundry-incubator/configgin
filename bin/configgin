@@ -1,16 +1,6 @@
 #!/usr/bin/env ruby
 
-ROOT_DIR = File.join(File.dirname(__FILE__), '..')
-
-Dir.chdir ROOT_DIR do
-  require 'bundler/setup'
-end
-
-$LOAD_PATH.unshift(File.join(ROOT_DIR, 'lib'))
-
-require 'cli'
-require 'generate'
-require 'environment_config_transmogrifier'
+require_relative "../lib/configgin"
 
 options = {}
 parser = Cli.make_option_parser(options)
@@ -19,9 +9,6 @@ parser.parse!(ARGV)
 
 begin
   Cli.check_opts(options)
-rescue ArgConflictError => e
-  STDERR.puts("invalid arguments: #{e}")
-  exit(1)
 rescue ArgMissingError => e
   STDERR.puts("missing argument: #{e}")
   exit(1)

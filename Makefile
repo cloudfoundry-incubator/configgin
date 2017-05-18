@@ -13,7 +13,7 @@ lint:
 	${GIT_ROOT}/make/lint
 
 dist:
-	${GIT_ROOT}/make/package
+	gem build ${GIT_ROOT}/configgin.gemspec
 
 clean:
 	rm -rf output
