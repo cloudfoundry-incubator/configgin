@@ -3,7 +3,7 @@
 set -o errexit
 
 if [ "$(uname)" == "Darwin" ]; then
-    DOCKER_RUNTIME=${DOCKER_RUNTIME:-'helioncf/hcf-pipeline-ruby-bosh'}
+    DOCKER_RUNTIME=${DOCKER_RUNTIME:-'splatform/bosh-cli'}
 
     # We need to mount the enclosing repo in case we are just a submodule
     # (still doesn't support being a nested submodule though)

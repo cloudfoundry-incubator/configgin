@@ -1,4 +1,5 @@
 # coding: utf-8
+
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'configgin/version'
@@ -6,11 +7,11 @@ require 'configgin/version'
 Gem::Specification.new do |spec|
   spec.name          = "configgin"
   spec.version       = Configgin::VERSION
-  spec.authors       = ["hpcloud"]
+  spec.authors       = ["SUSE"]
 
   spec.summary       = "A simple cli app in Ruby to generate configurations using BOSH ERB templates and a BOSH spec."
   spec.description   = "A simple cli app in Ruby to generate configurations using BOSH ERB templates and a BOSH spec, but also using configurations based on environment variables, processed using a set of templates."
-  spec.homepage      = "https://github.com/hpcloud/configgin"
+  spec.homepage      = "https://github.com/SUSE/configgin"
 
   spec.files         = `git ls-files -z`.split("\x0").reject do |f|
     f.match(%r{^(test|spec|features)/})
