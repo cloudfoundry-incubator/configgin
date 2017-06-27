@@ -16,4 +16,4 @@ dist:
 	gem build ${GIT_ROOT}/configgin.gemspec
 
 clean:
-	rm -rf output
+	rm -rf configgin-*.gem
