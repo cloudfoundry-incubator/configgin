@@ -23,8 +23,9 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "bundler", "~> 1.10"
   spec.add_development_dependency "rake", "~> 10.0"
 
-  spec.add_dependency 'bosh-template', '~> 1.3262', '>= 1.3262.24.0'
+  spec.add_dependency 'bosh-template', '~> 2.0'
   spec.add_dependency 'rainbow', '~>2.0', '!=2.2.1'
   spec.add_dependency 'deep_merge', '~> 1.1'
   spec.add_dependency 'mustache', '~> 1.0'
+  spec.add_dependency 'kubeclient', '~>2.0'
 end

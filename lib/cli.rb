@@ -1,5 +1,4 @@
 require 'optparse'
-require 'generate'
 require 'exceptions'
 
 # Cli is a helper module for dealing with command line flags

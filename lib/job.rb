@@ -1,17 +1,44 @@
 require 'bosh/template/renderer'
 require 'json'
+require_relative './kube_link_generator'
 
-# Generate has methods for manipulating streams and generating configuration
-# files using those streams.
-module Generate
-  # Proces the given template using a provided spec and output filename
+# Job describes a single BOSH job
+class Job
+  def initialize(spec, namespace, client)
+    @spec = spec
+    @namespace = namespace
+    @client = client
+    @spec['links'] = KubeLinkSpecs.new(@spec, @namespace, @client)
+  end
+
+  attr_reader :spec
+
+  def exported_properties
+    return @exported_propertes if @exported_properties
+    exported_properties = {}
+    spec['exported_properties'].each do |prop|
+      src = spec['properties']
+      dst = exported_properties
+      keys = prop.split('.')
+      leaf = keys.pop
+      keys.each do |key|
+        dst[key] ||= {}
+        dst = dst[key]
+        src = src.fetch(key, {})
+      end
+      dst[leaf] = src[leaf]
+    end
+    @exported_properties = exported_properties
+  end
+
+  # Process the given template using a provided spec and output filename
   #
-  # @param bosh_spec          [Hash]   The input data as a hash
   # @param input_file_path    [String] The input filepath for the template
   # @param output_file_path   [String] The output filepath
-  def self.generate(bosh_spec, input_file_path, output_file_path, &_block)
+  # @param dns_encoder        [KubeDNSEncoder] BOSH DNS encoder
+  def generate(input_file_path, output_file_path, dns_encoder)
     # Make sure we're getting all the parameters we need
-    raise NoDataProvided if bosh_spec.nil?
+    raise NoDataProvided if spec.nil?
     raise NoInputFileProvided if input_file_path.nil?
     raise NoOutputFileProvided if output_file_path.nil?
 
@@ -25,7 +52,7 @@ module Generate
     end
 
     # Create a BOSH evaluation context
-    evaluation_context = Bosh::Template::EvaluationContext.new(bosh_spec)
+    evaluation_context = Bosh::Template::EvaluationContext.new(spec, dns_encoder)
     # Process the Template
     output = erb_template.result(evaluation_context.get_binding)
 

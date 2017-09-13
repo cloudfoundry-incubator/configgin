@@ -1,15 +1,17 @@
 require 'spec_helper'
-require 'generate'
+require 'job'
 require 'stringio'
 require 'tempfile'
 
-describe Generate do
+describe Job do
   context 'with some file paths and an eval context' do
     template_filename = File.join(File.dirname(__FILE__), 'fixtures', 'fake.yml.erb')
     restricted_template_filename = File.join(File.dirname(__FILE__), 'fixtures', '0600.yml.erb')
     bosh_spec = File.join(File.dirname(__FILE__), 'fixtures', 'fake.json')
     expect_filename = File.join(File.dirname(__FILE__), 'fixtures', 'fake.yml')
     expect_output = File.read(expect_filename)
+
+    subject(:job) { Job.new(JSON.parse(File.read(bosh_spec)), 'namespace', nil) }
 
     it 'should preserve template permissions' do
       Dir.mktmpdir('configgin_mkdir_p_test') do |dir|
@@ -19,10 +21,10 @@ describe Generate do
           file.close
           restricted_file_duplicate = File.join(dir, 'test.chmod')
           FileUtils.cp(restricted_template_filename, restricted_file_duplicate)
-          File.chmod(0600, restricted_file_duplicate)
+          File.chmod(0o600, restricted_file_duplicate)
 
           # Act
-          Generate.generate(JSON.parse(File.read(bosh_spec)), restricted_file_duplicate, file.path)
+          job.generate(restricted_file_duplicate, file.path, nil)
 
           # Assert
           expect(format('%o', File.stat(file.path).mode)).to eq('100600')
@@ -39,7 +41,7 @@ describe Generate do
         file.close
 
         # Act
-        Generate.generate(JSON.parse(File.read(bosh_spec)), template_filename, file.path)
+        job.generate(template_filename, file.path, nil)
 
         # Assert (compare with expect_filename)
         expect(File.read(file)).to eq(expect_output)
@@ -54,14 +56,21 @@ describe Generate do
         output_file = File.join(dir, 'adirectory', 'test.yml')
 
         # Act
-        Generate.generate(JSON.parse(File.read(bosh_spec)), template_filename, output_file)
+        job.generate(template_filename, output_file, nil)
 
         # Assert (compare with expect_filename)
         output = YAML.load_file(output_file)
-        expect(output).to eq(YAML.load(expect_output))
+        expect(output).to eq(YAML.safe_load(expect_output))
 
         expect(Dir.exist?(File.dirname(output_file))).to be true
       end
+    end
+
+    it 'should list exported properties' do
+      expect(job.exported_properties).to eq({
+        'nats' => { 'machines' => ['localhost', '127.0.0.1'] },
+        'stuff' => { 'one' => 1, 'two' => [2] }
+      })
     end
   end
 end
