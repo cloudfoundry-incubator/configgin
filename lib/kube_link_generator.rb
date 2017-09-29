@@ -28,18 +28,20 @@ class KubeLinkSpecs
 
   def get_pods_for_role(role_name, wait_for_ip)
     loop do
-      sleep 1
-      pods = @client.get_pods(namespace: @namespace, label_selector: "skiff-role-name=#{role_name}")
-      if wait_for_ip
-        # Wait until all pods have IP addresses and properties
-        next unless pods.all? { |pod| pod.status.podIP }
-        next unless pods.all? { |pod| pod.metadata.annotations['skiff-exported-properties'] }
-      else
-        # We just need one pod with exported properties
-        pods.select! { |pod| pod.status.podIP }
-        pods.select! { |pod| pod.metadata.annotations['skiff-exported-properties'] }
+      1.times do
+        pods = @client.get_pods(namespace: @namespace, label_selector: "skiff-role-name=#{role_name}")
+        if wait_for_ip
+          # Wait until all pods have IP addresses and properties
+          break unless pods.all? { |pod| pod.status.podIP }
+          break unless pods.all? { |pod| pod.metadata.annotations['skiff-exported-properties'] }
+        else
+          # We just need one pod with exported properties
+          pods.select! { |pod| pod.status.podIP }
+          pods.select! { |pod| pod.metadata.annotations['skiff-exported-properties'] }
+        end
+        return pods unless pods.empty?
       end
-      return pods unless pods.empty?
+      sleep 1
     end
   end
 
@@ -78,22 +80,23 @@ class KubeLinkSpecs
     # Resolve the role we're looking for
     provider = @spec['consumes'][key]
     unless provider
-      STDERR.puts "No link provider found for #{key}"
+      $stderr.puts "No link provider found for #{key}"
       @links[key] = nil
       return @links[key]
     end
 
     if provider['role'] == this_name
-      STDERR.puts "Resolving link #{key} via self provider #{provider}"
-      instances = get_pods_for_role(provider['role'], true).map {|p| get_pod_instance_info(p, provider['job'])}
+      $stderr.puts "Resolving link #{key} via self provider #{provider}"
+      pods = get_pods_for_role(provider['role'], true)
+      instances = pods.map { |p| get_pod_instance_info(p, provider['job']) }
     else
       # Getting pods for a different service; since we have kube services, we don't handle it in configgin
-      STDERR.puts "Resolving link #{key} via service #{provider}"
+      $stderr.puts "Resolving link #{key} via service #{provider}"
       instances = [get_svc_instance_info(provider['role'], provider['job'])]
     end
 
     @links[key] = {
-      'address' => "#{key}.#{ENV['KUBE_SERVICE_DOMAIN_SUFFIX']}",
+      'address' => "#{provider['role']}.#{ENV['KUBE_SERVICE_DOMAIN_SUFFIX']}",
       'instance_group' => '',
       'default_network' => '',
       'deployment_name' => @namespace,

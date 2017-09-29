@@ -18,5 +18,15 @@
     "nats.machines",
     "stuff.one",
     "stuff.two"
-  ]
+  ],
+  "consumes": {
+    "link_name": {
+      "role": "provider-role",
+      "job": "provider-job"
+    },
+    "self": {
+      "role": "fake",
+      "job": "unused"
+    }
+  }
 }
