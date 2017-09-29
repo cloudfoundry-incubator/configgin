@@ -1,5 +1,6 @@
 require 'optparse'
-require 'exceptions'
+require_relative 'exceptions'
+require_relative 'configgin/version'
 
 # Cli is a helper module for dealing with command line flags
 module Cli
@@ -7,7 +8,7 @@ module Cli
   #
   # @param options [Hash] The options to check
   def self.check_opts(options)
-    [:jobs, :env2conf].each do |key|
+    %i[jobs env2conf].each do |key|
       if options[key].nil? || options[key].empty?
         raise ArgMissingError, key.to_s
       end
@@ -31,6 +32,11 @@ module Cli
       opts.on('-e', '--env2conf file',
               'Environment to configuration templates YAML') do |e|
         options[:env2conf] = e
+      end
+
+      opts.on('--version', 'Print the configgin version') do
+        puts Configgin::VERSION
+        exit 0
       end
     end
   end

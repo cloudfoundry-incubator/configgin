@@ -67,10 +67,10 @@ describe Job do
     end
 
     it 'should list exported properties' do
-      expect(job.exported_properties).to eq({
+      expect(job.exported_properties).to eq(
         'nats' => { 'machines' => ['localhost', '127.0.0.1'] },
         'stuff' => { 'one' => 1, 'two' => [2] }
-      })
+      )
     end
   end
 end
