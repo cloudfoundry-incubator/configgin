@@ -5,7 +5,7 @@ set -o errexit -o nounset
 
 REPO="${REPO:-scf}"
 
-IMAGE="$( cd "../${REPO}" && source .envrc && echo "$FISSILE_STEMCELL" )"
+IMAGE="$( cd "../${REPO}" && source .envrc && echo "${FISSILE_STEMCELL}" )"
 
 name="${IMAGE%%:*}"
 tag="${IMAGE##*:}"
@@ -33,7 +33,10 @@ vagrant_ready=""
 if test -z "${NO_RUN:-}" ; then
     if ( cd "$(dirname "$0")/../${REPO}" && (vagrant status 2>/dev/null | grep --quiet running) ) ; then
         vagrant_ready="true"
-        helm list --short | xargs --no-run-if-empty helm delete --purge
+        releases=$(helm list --short)
+        if test -n "${releases}" ; then
+            helm delete --purge ${releases}
+        fi
         kubectl delete ns cf ||:
         kubectl delete ns uaa ||:
     fi
@@ -57,18 +60,23 @@ docker commit "${container}" "${IMAGE}"
 
 test -z "${NO_RUN:-}" || exit
 
-docker_user=$(docker system info | awk -F: '{ if ($1 == "Username") { print  $2} }' | tr -d '[:space:]' ||:)
-if test -n "${docker_user}" ; then
-    docker tag "${IMAGE}" "${docker_user}/${name##*/}:${tag}"
-    docker push "${docker_user}/${name##*/}:${tag}"
+if command -v docker-credential-osxkeychain >/dev/null 2>/dev/null ; then
+    docker_user=$(docker-credential-osxkeychain list | jq -r '."https://index.docker.io/v1/"')
+else
+    docker_user=$(docker system info | awk -F: '{ if ($1 == "Username") { print  $2} }' | tr -d '[:space:]' ||:)
 fi
+
+if test -z "${docker_user:-}" ; then
+    echo "Can't determine docker user. Are you logged in?"
+    exit
+fi
+
+docker tag "${IMAGE}" "${docker_user}/${name##*/}:${tag}"
+docker push "${docker_user}/${name##*/}:${tag}"
 
 test -n "${vagrant_ready}" || exit
 
 cd "$(dirname "$0")/../${REPO}"
-if ! (vagrant status 2>/dev/null | grep --quiet running) ; then
-    exit 0
-fi
 
 vagrant ssh -- -tt <<EOF
     set -o errexit -o nounset
