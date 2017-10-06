@@ -1,6 +1,14 @@
 #!/bin/bash
 
-# This will rebuild configgin for the image
+# This script will replace the stemcell on a vagrant box with one that has a
+# copy of configgin built from the current directory.  This is (obviously) only
+# meant as a testing tool.
+
+# Pre-requisites:
+# - SCF checkout (preferably in ../scf, override in $REPO)
+# - vagrant VM running for that checkout
+# - docker daemon running on the host (requires volumes)
+
 set -o errexit -o nounset
 
 REPO="${REPO:-scf}"
