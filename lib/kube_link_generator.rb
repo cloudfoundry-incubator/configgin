@@ -75,7 +75,7 @@ class KubeLinkSpecs
     properties = JSON.parse(pod.metadata.annotations['skiff-exported-properties'])
     {
       'name' => svc.metadata.name,
-      'index' => 0,
+      'index' => 0, # Completely made up index; there is only ever one service
       'id' => svc.metadata.name,
       'az' => pod.metadata.annotations['failure-domain.beta.kubernetes.io/zone'] || 'az0',
       'address' => svc.spec.clusterIP,
