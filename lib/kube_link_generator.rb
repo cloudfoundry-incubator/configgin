@@ -19,9 +19,15 @@ class KubeLinkSpecs
     @spec['job']['name']
   end
 
+  # pod_index returns a number for the given mod name. The number is expected to
+  # be unique across all pods for the role.
   def pod_index(name)
     index = name.rpartition('-').last
     return index.to_i if /^\d+$/ =~ index
+    # The pod name is something like role-abcxyz
+    # Derive the index from the randomness that went into the suffix.
+    # chars are the characters kubernetes might use to generate names
+    # Copied from https://github.com/kubernetes/kubernetes/blob/52a6ad0acb26/staging/src/k8s.io/client-go/pkg/util/rand/rand.go#L73
     chars = 'bcdfghjklmnpqrstvwxz0123456789'
     index.chars.map { |c| chars.index(c) }.reduce(0) { |v, c| v * chars.length + c }
   end
