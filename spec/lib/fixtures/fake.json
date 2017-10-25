@@ -1,10 +1,32 @@
 {
+  "job": {
+    "name": "fake"
+  },
   "properties": {
     "nats": {
       "machines": ["localhost", "127.0.0.1"]
     },
     "cloud_controller": {
       "base_dir": "directory"
+    },
+    "stuff": {
+      "one": 1,
+      "two": [ 2 ]
+    }
+  },
+  "exported_properties": [
+    "nats.machines",
+    "stuff.one",
+    "stuff.two"
+  ],
+  "consumes": {
+    "link_name": {
+      "role": "provider-role",
+      "job": "provider-job"
+    },
+    "self": {
+      "role": "fake",
+      "job": "unused"
     }
   }
 }

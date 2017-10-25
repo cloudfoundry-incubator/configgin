@@ -24,13 +24,11 @@ describe EnvironmentConfigTransmogrifier do
     end
 
     it 'should error on overriding non hash values' do
-      # Arrange
       environment_templates = {
         'properties.non_hash_key.error' => '((TEST_ENV_VAR))'
       }
+      expect(ENV).to receive(:to_hash).and_return('TEST_ENV_VAR' => 'false')
 
-      # Act
-      # Assert
       expect {
         EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates)
       }.to(raise_exception(NonHashValueOverride,

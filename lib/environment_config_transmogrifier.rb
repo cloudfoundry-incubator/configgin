@@ -46,7 +46,7 @@ module EnvironmentConfigTransmogrifier
       inject_value(base_config, key.split('.'), value, key)
     end
 
-    base_config['bootstrap'] = (base_config['index'] || 0) == 0
+    base_config['bootstrap'] = (base_config['index'] || 0).zero?
 
     base_config
   end
@@ -61,7 +61,7 @@ module EnvironmentConfigTransmogrifier
       # replace new lines with double new lines for proper new-line YAML parsing
       mustache_value = mustache_value.to_s.gsub("\n", "\n\n")
       @@memoize_mustache[value] ||= {}
-      @@memoize_mustache[value][input_hash] = YAML.load(mustache_value)
+      @@memoize_mustache[value][input_hash] = YAML.safe_load(mustache_value)
     rescue => e
       msg = mustacheMessageFromError(e)
       raise LoadYamlFromMustacheError, "Could not load config key '#{key}': #{msg}"

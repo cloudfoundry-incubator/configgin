@@ -3,3 +3,5 @@ nats_machines:
 <% p("nats.machines").each do |address| %>  - nats://<%= address %>
 <% end %>
 base_dir: <%= p("cloud_controller.base_dir") %>
+self_address: <%= link("self").address %>
+link_prop: <%= link("link_name").p("hello.world") %>

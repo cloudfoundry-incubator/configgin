@@ -1,0 +1,28 @@
+# This is the Kubernetes state for job_spec.rb
+---
+pod:
+- metadata:
+    name: pod-0
+    namespace: namespace
+    annotations:
+      skiff-exported-properties: '{}'
+    labels:
+      skiff-role-name: fake
+  status:
+    podIP: '192.168.2.67'
+- metadata:
+    name: other-234z234
+    namespace: namespace
+    annotations:
+      skiff-exported-properties: '{"provider-job":{"hello":{"world":"ohai"}}}'
+    labels:
+      skiff-role-name: provider-role
+  status:
+    podIP: '192.168.2.39'
+
+service:
+- metadata:
+    name: provider-role
+    namespace: namespace
+  spec:
+    clusterIP: '192.168.2.221'
