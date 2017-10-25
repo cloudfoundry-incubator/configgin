@@ -34,20 +34,24 @@ class KubeLinkSpecs
 
   def get_pods_for_role(role_name, wait_for_ip)
     loop do
-      1.times do
-        pods = @client.get_pods(namespace: @namespace, label_selector: "skiff-role-name=#{role_name}")
-        if wait_for_ip
-          # Wait until all pods have IP addresses and properties
-          break unless pods.all? { |pod| pod.status.podIP }
-          break unless pods.all? { |pod| pod.metadata.annotations['skiff-exported-properties'] }
-        else
-          # We just need one pod with exported properties
-          pods.select! { |pod| pod.status.podIP }
-          pods.select! { |pod| pod.metadata.annotations['skiff-exported-properties'] }
+      # The 30.times loop exists to print out status messages
+      30.times do
+        1.times do
+          pods = @client.get_pods(namespace: @namespace, label_selector: "skiff-role-name=#{role_name}")
+          if wait_for_ip
+            # Wait until all pods have IP addresses and properties
+            break unless pods.all? { |pod| pod.status.podIP }
+            break unless pods.all? { |pod| pod.metadata.annotations['skiff-exported-properties'] }
+          else
+            # We just need one pod with exported properties
+            pods.select! { |pod| pod.status.podIP }
+            pods.select! { |pod| pod.metadata.annotations['skiff-exported-properties'] }
+          end
+          return pods unless pods.empty?
         end
-        return pods unless pods.empty?
+        sleep 1
       end
-      sleep 1
+      $stdout.puts "Waiting for pods for role #{role_name} (at #{Time.now})..."
     end
   end
 
