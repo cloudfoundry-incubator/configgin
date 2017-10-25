@@ -1,6 +1,6 @@
 require 'bosh/template/renderer'
 require 'json'
-require_relative './kube_link_generator'
+require_relative 'kube_link_generator'
 
 # Job describes a single BOSH job
 class Job
