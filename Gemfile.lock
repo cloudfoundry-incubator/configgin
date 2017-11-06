@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    configgin (0.12.1)
+    configgin (0.13.0)
       bosh-template (~> 2.0)
       deep_merge (~> 1.1)
       kubeclient (~> 2.0)
@@ -29,7 +29,7 @@ GEM
       domain_name (~> 0.5)
     http-form_data (1.0.3)
     http_parser.rb (0.6.0)
-    kubeclient (2.4.0)
+    kubeclient (2.5.1)
       http (= 0.9.8)
       recursive-open-struct (= 1.0.0)
       rest-client
