@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    configgin (0.13.0)
+    configgin (0.14.0)
       bosh-template (~> 2.0)
       deep_merge (~> 1.1)
       kubeclient (~> 2.0)
@@ -41,7 +41,7 @@ GEM
     parser (2.4.0.0)
       ast (~> 2.2)
     powerpack (0.1.1)
-    public_suffix (3.0.0)
+    public_suffix (3.0.1)
     rainbow (2.1.0)
     rake (10.4.2)
     recursive-open-struct (1.0.0)
