@@ -32,12 +32,16 @@ class KubeLinkSpecs
     index.chars.map { |c| chars.index(c) }.reduce(0) { |v, c| v * chars.length + c }
   end
 
+  def _get_pods_for_role(role_name)
+    @client.get_pods(namespace: @namespace, label_selector: "skiff-role-name=#{role_name}")
+  end
+
   def get_pods_for_role(role_name, wait_for_ip)
     loop do
       # The 30.times loop exists to print out status messages
       30.times do
         1.times do
-          pods = @client.get_pods(namespace: @namespace, label_selector: "skiff-role-name=#{role_name}")
+          pods = _get_pods_for_role(role_name)
           if wait_for_ip
             # Wait until all pods have IP addresses and properties
             break unless pods.all? { |pod| pod.status.podIP }
@@ -55,7 +59,7 @@ class KubeLinkSpecs
     end
   end
 
-  def get_pod_instance_info(pod, job)
+  def get_pod_instance_info(pod, job, pods_per_image)
     index = pod_index(pod.metadata.name)
     properties = JSON.parse(pod.metadata.annotations['skiff-exported-properties'])
     {
@@ -65,8 +69,24 @@ class KubeLinkSpecs
       'az' => pod.metadata.annotations['failure-domain.beta.kubernetes.io/zone'] || 'az0',
       'address' => pod.status.podIP,
       'properties' => properties.fetch(job, {}),
-      'bootstrap' => index.zero?
+      'bootstrap' => pods_per_image[pod.metadata.uid] < 2
     }
+  end
+
+  # Return the number of pods for each image
+  def get_pods_per_image(pods)
+    result = {}
+    sets = Hash.new(0)
+    keys = {}
+    pods.each do |pod|
+      key = pod.status.containerStatuses.map(&:imageID).sort.join("\n")
+      sets[key] += 1
+      keys[pod.metadata.uid] = key
+    end
+    pods.each do |pod|
+      result[pod.metadata.uid] = sets[keys[pod.metadata.uid]]
+    end
+    result
   end
 
   def get_svc_instance_info(role_name, job)
@@ -98,7 +118,8 @@ class KubeLinkSpecs
     if provider['role'] == this_name
       $stderr.puts "Resolving link #{key} via self provider #{provider}"
       pods = get_pods_for_role(provider['role'], true)
-      instances = pods.map { |p| get_pod_instance_info(p, provider['job']) }
+      pods_per_image = get_pods_per_image(pods)
+      instances = pods.map { |p| get_pod_instance_info(p, provider['job'], pods_per_image) }
     else
       # Getting pods for a different service; since we have kube services, we don't handle it in configgin
       $stderr.puts "Resolving link #{key} via service #{provider}"

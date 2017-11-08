@@ -10,6 +10,9 @@ pod:
       skiff-role-name: fake
   status:
     podIP: '192.168.2.67'
+    containerStatuses:
+    - imageID: docker://image-one
+    - imageID: docker://image-two
 - metadata:
     name: other-234z234
     namespace: namespace
@@ -19,6 +22,9 @@ pod:
       skiff-role-name: provider-role
   status:
     podIP: '192.168.2.39'
+    containerStatuses:
+    - imageID: docker://image-one
+    - imageID: docker://image-two
 
 service:
 - metadata:
