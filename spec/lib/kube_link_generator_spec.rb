@@ -7,7 +7,7 @@ describe KubeLinkSpecs do
 
     let(:namespace) { 'namespace' }
     let(:client) { MockKubeClient.new(fixture('state-multi.yml')) }
-    subject(:specs) { KubeLinkSpecs.new(bosh_spec, namespace, client) }
+    subject(:specs) { KubeLinkSpecs.new(bosh_spec, namespace, client, client) }
 
     before do
       allow(ENV).to receive(:[]).and_wrap_original do |env, name|

@@ -17,7 +17,7 @@ describe Job do
     expect_output = File.read(fixture('fake.yml'))
 
     let(:client) { MockKubeClient.new(fixture('state.yml')) }
-    subject(:job) { Job.new(bosh_spec, 'namespace', client) }
+    subject(:job) { Job.new(bosh_spec, 'namespace', client, client) }
 
     before do
       allow(ENV).to receive(:[]).and_wrap_original do |env, name|
