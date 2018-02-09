@@ -7,7 +7,8 @@ describe KubeLinkSpecs do
 
     let(:namespace) { 'namespace' }
     let(:client) { MockKubeClient.new(fixture('state-multi.yml')) }
-    subject(:specs) { KubeLinkSpecs.new(bosh_spec, namespace, client, client) }
+    let(:client_stateful_set) { MockKubeClient.new(fixture('stateful-set.yml')) }
+    subject(:specs) { KubeLinkSpecs.new(bosh_spec, namespace, client, client_stateful_set) }
 
     before do
       allow(ENV).to receive(:[]).and_wrap_original do |env, name|
@@ -20,6 +21,22 @@ describe KubeLinkSpecs do
 
     around(:each) { |ex| trap_error(ex) }
 
+    context :get_statefulset_instance_info do
+      it 'should return the expected information' do
+        instances = specs.get_statefulset_instance_info('dummy', 'dummy')
+        expect(instances.length).to be 3
+        expect(instances[0]['bootstrap']).to be true
+        expect(instances[1]['bootstrap']).to be false
+        expect(instances[2]['bootstrap']).to be false
+        expect(instances[0]['index']).to be 0
+        expect(instances[1]['index']).to be 1
+        expect(instances[2]['index']).to be 2
+        expect(instances[0]['address']).to eq 'dummy-0.dummy-set'
+        expect(instances[1]['address']).to eq 'dummy-1.dummy-set'
+        expect(instances[2]['address']).to eq 'dummy-2.dummy-set'
+      end
+    end
+
     context :get_pod_instance_info do
       it 'should return the expected information' do
         job = 'dummy'
@@ -28,7 +45,7 @@ describe KubeLinkSpecs do
         expect(pod).to_not be_nil
         pods_per_image = specs.get_pods_per_image(pods)
         expect(specs.get_pod_instance_info(pod, job, pods_per_image)).to include(
-          'address'    => nil,
+          'address'    => '1.2.3.4',
           'az'         => 'az0',
           'bootstrap'  => true,
           'id'         => 'bootstrap-pod-3',

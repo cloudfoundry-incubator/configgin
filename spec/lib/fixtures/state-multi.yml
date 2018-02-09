@@ -10,6 +10,7 @@ pod:
     annotations:
       skiff-exported-properties: '{}'
   status:
+    podIP: 1.2.3.4
     containerStatuses:
     - imageID: docker://aaa
     - imageID: docker://bbb
@@ -22,6 +23,7 @@ pod:
     annotations:
       skiff-exported-properties: '{}'
   status:
+    podIP: 1.2.3.4
     containerStatuses:
     - imageID: docker://aaa
     - imageID: docker://bbb
@@ -34,6 +36,7 @@ pod:
     annotations:
       skiff-exported-properties: '{}'
   status:
+    podIP: 1.2.3.4
     containerStatuses:
       - imageID: docker://ccc
 - metadata:
@@ -45,6 +48,7 @@ pod:
     annotations:
       skiff-exported-properties: '{}'
   status:
+    podIP: 1.2.3.4
     containerStatuses:
     - imageID: docker://ccc
 

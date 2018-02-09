@@ -1,0 +1,11 @@
+# This is the Kubernetes stateful set for kube_link_generator.rb
+---
+stateful_set:
+  - metadata:
+      labels:
+        skiff-role-name: dummy
+      name: dummy
+      namespace: namespace
+    spec:
+      replicas: 3
+      serviceName: dummy-set
