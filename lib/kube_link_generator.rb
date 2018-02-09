@@ -110,21 +110,17 @@ class KubeLinkSpecs
     pod = get_pods_for_role(role_name, false).first
     properties = JSON.parse(pod.metadata.annotations['skiff-exported-properties'])
 
-    instances = []
-
-    ss.spec.replicas.times do |count|
-      instances.push(
+    Array.new(ss.spec.replicas) do |i|
+      {
         'name' => ss.metadata.name,
-        'index' => count,
+        'index' => i,
         'id' => ss.metadata.name,
         'az' => pod.metadata.annotations['failure-domain.beta.kubernetes.io/zone'] || 'az0',
-        'address' => "#{ss.metadata.name}-#{count}.#{ss.spec.serviceName}",
+        'address' => "#{ss.metadata.name}-#{i}.#{ss.spec.serviceName}",
         'properties' => properties.fetch(job, {}),
-        'bootstrap' => count.zero?
-      )
+        'bootstrap' => i.zero?
+      }
     end
-
-    instances
   end
 
   def service?(role_name)
