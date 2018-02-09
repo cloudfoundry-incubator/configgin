@@ -4,11 +4,11 @@ require_relative 'kube_link_generator'
 
 # Job describes a single BOSH job
 class Job
-  def initialize(spec, namespace, client)
+  def initialize(spec, namespace, client, client_stateful_set)
     @spec = spec
     @namespace = namespace
     @client = client
-    @spec['links'] = KubeLinkSpecs.new(@spec, @namespace, @client)
+    @spec['links'] = KubeLinkSpecs.new(@spec, @namespace, @client, client_stateful_set)
   end
 
   attr_reader :spec

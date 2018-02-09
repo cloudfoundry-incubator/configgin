@@ -8,9 +8,10 @@ class KubeLinkSpecs
   # ANNOTATION_AZ is the Kube annotation for the (availability) zone
   ANNOTATION_AZ = 'failure-domain.beta.kubernetes.io/zone'.freeze
 
-  def initialize(spec, namespace, kube_client)
+  def initialize(spec, namespace, kube_client, kube_client_stateful_set)
     @links = {}
     @client = kube_client
+    @client_stateful_set = kube_client_stateful_set
     @namespace = namespace
     @spec = spec || {}
   end
@@ -104,6 +105,31 @@ class KubeLinkSpecs
     }
   end
 
+  def get_statefulset_instance_info(role_name, job)
+    ss = @client_stateful_set.get_stateful_set(role_name, @namespace)
+    pod = get_pods_for_role(role_name, false).first
+    properties = JSON.parse(pod.metadata.annotations['skiff-exported-properties'])
+
+    Array.new(ss.spec.replicas) do |i|
+      {
+        'name' => ss.metadata.name,
+        'index' => i,
+        'id' => ss.metadata.name,
+        'az' => pod.metadata.annotations['failure-domain.beta.kubernetes.io/zone'] || 'az0',
+        'address' => "#{ss.metadata.name}-#{i}.#{ss.spec.serviceName}",
+        'properties' => properties.fetch(job, {}),
+        'bootstrap' => i.zero?
+      }
+    end
+  end
+
+  def service?(role_name)
+    @client.get_service(role_name, @namespace)
+    true
+  rescue KubeException
+    false
+  end
+
   def [](key)
     return @links[key] if @links.key? key
 
@@ -120,10 +146,14 @@ class KubeLinkSpecs
       pods = get_pods_for_role(provider['role'], true)
       pods_per_image = get_pods_per_image(pods)
       instances = pods.map { |p| get_pod_instance_info(p, provider['job'], pods_per_image) }
-    else
+    elsif service? provider['role']
       # Getting pods for a different service; since we have kube services, we don't handle it in configgin
       $stderr.puts "Resolving link #{key} via service #{provider}"
       instances = [get_svc_instance_info(provider['role'], provider['job'])]
+    else
+      # If there's no service associated, check the statefulset instead
+      $stderr.puts "Resolving link #{key} via statefulset #{provider}"
+      instances = get_statefulset_instance_info(provider['role'], provider['job'])
     end
 
     @links[key] = {
