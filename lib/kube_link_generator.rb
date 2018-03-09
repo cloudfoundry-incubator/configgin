@@ -66,7 +66,8 @@ class KubeLinkSpecs
     {
       'name' => pod.metadata.name,
       'index' => index,
-      'id' => pod.metadata.name,
+      'id' => pod.metadata.uid,
+      'deployment' => pod.metadata.namespace,
       'az' => pod.metadata.annotations['failure-domain.beta.kubernetes.io/zone'] || 'az0',
       'address' => pod.status.podIP,
       'properties' => properties.fetch(job, {}),
@@ -97,7 +98,8 @@ class KubeLinkSpecs
     {
       'name' => svc.metadata.name,
       'index' => 0, # Completely made up index; there is only ever one service
-      'id' => svc.metadata.name,
+      'id' => svc.metadata.uid,
+      'deployment' => svc.metadata.namespace,
       'az' => pod.metadata.annotations['failure-domain.beta.kubernetes.io/zone'] || 'az0',
       'address' => svc.spec.clusterIP,
       'properties' => properties.fetch(job, {}),
@@ -114,7 +116,8 @@ class KubeLinkSpecs
       {
         'name' => ss.metadata.name,
         'index' => i,
-        'id' => ss.metadata.name,
+        'id' => ss.metadata.uid,
+        'deployment' => ss.metadata.namespace,
         'az' => pod.metadata.annotations['failure-domain.beta.kubernetes.io/zone'] || 'az0',
         'address' => "#{ss.metadata.name}-#{i}.#{ss.spec.serviceName}",
         'properties' => properties.fetch(job, {}),

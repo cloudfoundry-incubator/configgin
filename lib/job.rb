@@ -8,7 +8,13 @@ class Job
     @spec = spec
     @namespace = namespace
     @client = client
+    @spec['id'] = this_pod.metadata.uid
+    @spec['deployment'] = this_pod.metadata.namespace
     @spec['links'] = KubeLinkSpecs.new(@spec, @namespace, @client, client_stateful_set)
+  end
+
+  def this_pod
+    @this_pod ||= @client.get_pod(ENV['HOSTNAME'], @namespace)
   end
 
   attr_reader :spec
