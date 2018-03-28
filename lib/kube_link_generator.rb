@@ -20,7 +20,7 @@ class KubeLinkSpecs
     @spec['job']['name']
   end
 
-  # pod_index returns a number for the given mod name. The number is expected to
+  # pod_index returns a number for the given pod name. The number is expected to
   # be unique across all pods for the role.
   def pod_index(name)
     index = name.rpartition('-').last
