@@ -48,7 +48,8 @@ describe KubeLinkSpecs do
           'address'    => '1.2.3.4',
           'az'         => 'az0',
           'bootstrap'  => true,
-          'id'         => 'bootstrap-pod-3',
+          'id'         => '9091e7e7-ec89-453b-b5ca-352a47772fe9',
+          'deployment' => 'namespace',
           'index'      => 3,
           'name'       => 'bootstrap-pod-3',
           'properties' => {}
