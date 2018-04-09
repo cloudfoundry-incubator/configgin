@@ -8,7 +8,13 @@ class Job
     @spec = spec
     @namespace = namespace
     @client = client
-    @spec['links'] = KubeLinkSpecs.new(@spec, @namespace, @client, client_stateful_set)
+    links = @spec['links'] = KubeLinkSpecs.new(@spec, @namespace, @client, client_stateful_set)
+
+    # Figure out whether _this_ should bootstrap
+    pods = links.get_pods_for_role(self_role, true)
+    pods_per_image = links.get_pods_per_image(pods)
+    pod_info = links.get_pod_instance_info(self_pod, nil, pods_per_image)
+    @spec['bootstrap'] = pods_per_image[self_pod.metadata.uid] < 2
   end
 
   attr_reader :spec
@@ -29,6 +35,14 @@ class Job
       dst[leaf] = src[leaf]
     end
     @exported_properties = exported_properties
+  end
+
+  def self_pod
+    @self_pod ||= @client.get_pod(ENV['HOSTNAME'], @namespace)
+  end
+
+  def self_role
+    self_pod['metadata']['labels']['skiff-role-name']
   end
 
   # Process the given template using a provided spec and output filename
