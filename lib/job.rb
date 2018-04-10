@@ -13,7 +13,6 @@ class Job
     # Figure out whether _this_ should bootstrap
     pods = links.get_pods_for_role(self_role, true)
     pods_per_image = links.get_pods_per_image(pods)
-    pod_info = links.get_pod_instance_info(self_pod, nil, pods_per_image)
     @spec['bootstrap'] = pods_per_image[self_pod.metadata.uid] < 2
   end
 

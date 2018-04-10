@@ -102,7 +102,7 @@ describe Job do
 
     it 'should bootstrap when pod is alone' do
       allow(ENV).to receive(:[]).and_wrap_original do |env, name|
-        (name == 'HOSTNAME') ? 'unrelated-pod-0' : env.call(name)
+        name == 'HOSTNAME' ? 'unrelated-pod-0' : env.call(name)
       end
       job = Job.new(bosh_spec, namespace, client, client)
       expect(job.spec['bootstrap']).to be_truthy
@@ -110,7 +110,7 @@ describe Job do
 
     it 'should bootstrap when only pod with this image' do
       allow(ENV).to receive(:[]).and_wrap_original do |env, name|
-        (name == 'HOSTNAME') ? 'bootstrap-pod-3' : env.call(name)
+        name == 'HOSTNAME' ? 'bootstrap-pod-3' : env.call(name)
       end
       job = Job.new(bosh_spec, namespace, client, client)
       expect(job.spec['bootstrap']).to be_truthy
@@ -118,7 +118,7 @@ describe Job do
 
     it 'shoud not upgrade when multiple pods with same image' do
       allow(ENV).to receive(:[]).and_wrap_original do |env, name|
-        (name == 'HOSTNAME') ? 'ready-pod-0' : env.call(name)
+        name == 'HOSTNAME' ? 'ready-pod-0' : env.call(name)
       end
       job = Job.new(bosh_spec, namespace, client, client)
       expect(job.spec['bootstrap']).to be_falsy
