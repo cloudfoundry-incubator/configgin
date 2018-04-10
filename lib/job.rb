@@ -11,7 +11,7 @@ class Job
     links = @spec['links'] = KubeLinkSpecs.new(@spec, @namespace, @client, client_stateful_set)
 
     # Figure out whether _this_ should bootstrap
-    pods = links.get_pods_for_role(self_role, true)
+    pods = @client.get_pods(namespace: @namespace, label_selector: "skiff-role-name=#{self_role}")
     pods_per_image = links.get_pods_per_image(pods)
     @spec['bootstrap'] = pods_per_image[self_pod.metadata.uid] < 2
   end
