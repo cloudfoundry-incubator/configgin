@@ -1,3 +1,3 @@
 module Configgin
-  VERSION = '0.15'.freeze
+  VERSION = '0.15.0'.freeze
 end
