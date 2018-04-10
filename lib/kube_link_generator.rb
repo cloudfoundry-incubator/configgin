@@ -137,8 +137,7 @@ class KubeLinkSpecs
     provider = @spec['consumes'][key]
     unless provider
       $stderr.puts "No link provider found for #{key}"
-      @links[key] = nil
-      return @links[key]
+      return @links[key] = nil
     end
 
     if provider['role'] == this_name

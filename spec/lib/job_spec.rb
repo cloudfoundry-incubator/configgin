@@ -22,6 +22,7 @@ describe Job do
     before do
       allow(ENV).to receive(:[]).and_wrap_original do |env, name|
         case name
+        when 'HOSTNAME' then 'pod-0'
         when 'KUBE_SERVICE_DOMAIN_SUFFIX' then 'domain'
         else env.call(name)
         end
@@ -88,6 +89,39 @@ describe Job do
         'nats' => { 'machines' => ['localhost', '127.0.0.1'] },
         'stuff' => { 'one' => 1, 'two' => [2] }
       )
+    end
+  end
+
+  context 'when resolving bootstrapness' do
+    bosh_spec = JSON.parse(File.read(fixture('fake.json')))
+
+    let(:namespace) { 'namespace' }
+    let(:client) { MockKubeClient.new(fixture('state-multi.yml')) }
+
+    around(:each) { |ex| trap_error(ex) }
+
+    it 'should bootstrap when pod is alone' do
+      allow(ENV).to receive(:[]).and_wrap_original do |env, name|
+        name == 'HOSTNAME' ? 'unrelated-pod-0' : env.call(name)
+      end
+      job = Job.new(bosh_spec, namespace, client, client)
+      expect(job.spec['bootstrap']).to be_truthy
+    end
+
+    it 'should bootstrap when only pod with this image' do
+      allow(ENV).to receive(:[]).and_wrap_original do |env, name|
+        name == 'HOSTNAME' ? 'bootstrap-pod-3' : env.call(name)
+      end
+      job = Job.new(bosh_spec, namespace, client, client)
+      expect(job.spec['bootstrap']).to be_truthy
+    end
+
+    it 'shoud not upgrade when multiple pods with same image' do
+      allow(ENV).to receive(:[]).and_wrap_original do |env, name|
+        name == 'HOSTNAME' ? 'ready-pod-0' : env.call(name)
+      end
+      job = Job.new(bosh_spec, namespace, client, client)
+      expect(job.spec['bootstrap']).to be_falsy
     end
   end
 end
