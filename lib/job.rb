@@ -58,7 +58,7 @@ class Job
     # Read the erb template
     begin
       perms = File.stat(input_file_path).mode
-      erb_template = ERB.new(File.read(input_file_path), safe_level = nil, trim_mode = "-")
+      erb_template = ERB.new(File.read(input_file_path), nil, '-')
       erb_template.filename = input_file_path
     rescue Errno::ENOENT
       raise "failed to read template file #{input_file_path}"
