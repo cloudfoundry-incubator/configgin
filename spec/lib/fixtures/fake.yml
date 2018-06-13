@@ -4,5 +4,5 @@ nats_machines:
   - nats://127.0.0.1
 
 base_dir: directory
-self_address: fake.domain
+self_address: fake.namespace.svc.domain
 link_prop: ohai
