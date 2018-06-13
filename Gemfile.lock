@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    configgin (0.14.1)
+    configgin (0.16.0)
       bosh-template (~> 2.0)
       deep_merge (~> 1.1)
       kubeclient (~> 2.0)
@@ -14,11 +14,11 @@ GEM
     addressable (2.5.2)
       public_suffix (>= 2.0.2, < 4.0)
     ast (2.3.0)
-    bosh-template (2.0.0)
+    bosh-template (2.1.0)
       semi_semantic (~> 1.2.0)
     deep_merge (1.2.1)
     diff-lcs (1.3)
-    domain_name (0.5.20170404)
+    domain_name (0.5.20180417)
       unf (>= 0.0.5, < 1.0.0)
     http (2.2.2)
       addressable (~> 2.3)
@@ -41,7 +41,7 @@ GEM
     parser (2.4.0.0)
       ast (~> 2.2)
     powerpack (0.1.1)
-    public_suffix (3.0.1)
+    public_suffix (3.0.2)
     rainbow (2.1.0)
     rake (10.4.2)
     recursive-open-struct (1.0.5)
@@ -86,4 +86,4 @@ DEPENDENCIES
   rubocop
 
 BUNDLED WITH
-   1.15.1
+   1.16.1

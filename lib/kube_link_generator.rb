@@ -156,12 +156,12 @@ class KubeLinkSpecs
     end
 
     @links[key] = {
-      'address' => "#{provider['role']}.#{ENV['KUBE_SERVICE_DOMAIN_SUFFIX']}",
+      'address' => "#{provider['role']}.#{ENV['KUBERNETES_NAMESPACE']}.svc.#{ENV['KUBERNETES_CLUSTER_DOMAIN']}",
       'instance_group' => '',
       'default_network' => '',
       'deployment_name' => @namespace,
-      'domain' => ENV['KUBE_SERVICE_DOMAIN_SUFFIX'],
-      'root_domain' => ENV['KUBE_SERVICE_DOMAIN_SUFFIX'],
+      'domain' => "#{ENV['KUBERNETES_NAMESPACE']}.svc.#{ENV['KUBERNETES_CLUSTER_DOMAIN']}",
+      'root_domain' => "#{ENV['KUBERNETES_NAMESPACE']}.svc.#{ENV['KUBERNETES_CLUSTER_DOMAIN']}",
       'instances' => instances,
       'properties' => instances.first['properties']
     }

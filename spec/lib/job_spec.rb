@@ -23,7 +23,8 @@ describe Job do
       allow(ENV).to receive(:[]).and_wrap_original do |env, name|
         case name
         when 'HOSTNAME' then 'pod-0'
-        when 'KUBE_SERVICE_DOMAIN_SUFFIX' then 'domain'
+        when 'KUBERNETES_CLUSTER_DOMAIN' then 'domain'
+        when 'KUBERNETES_NAMESPACE' then 'namespace'
         else env.call(name)
         end
       end
