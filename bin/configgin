@@ -65,12 +65,13 @@ job_configs.each do |job, job_config|
   jobs[job] = Job.new(bosh_spec, kube_namespace, kube_client, kube_client_stateful_set)
 end
 
-exported_properties = Hash[jobs.map { |name, job| [name, job.exported_properties] }]
-kube_client.patch_pod(
-  ENV['HOSTNAME'],
-  { metadata: { annotations: { :'skiff-exported-properties' => exported_properties.to_json } } },
-  kube_namespace
-)
+jobs.each do |name, job|
+  kube_client.patch_pod(
+    ENV['HOSTNAME'],
+    { metadata: { annotations: { :"skiff-exported-properties-#{name}" => job.exported_properties.to_json } } },
+    kube_namespace
+  )
+end
 
 jobs.each do |job_name, job|
   dns_encoder = KubeDNSEncoder.new(job.spec['links'])
