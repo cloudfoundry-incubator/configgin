@@ -8,7 +8,7 @@ pod:
     labels:
       skiff-role-name: dummy
     annotations:
-      skiff-exported-properties: '{}'
+      skiff-exported-properties-dummy: '{}'
   status:
     podIP: 1.2.3.4
     containerStatuses:
@@ -21,7 +21,7 @@ pod:
     labels:
       skiff-role-name: dummy
     annotations:
-      skiff-exported-properties: '{}'
+      skiff-exported-properties-dummy: '{}'
   status:
     podIP: 1.2.3.4
     containerStatuses:
@@ -34,7 +34,7 @@ pod:
     labels:
       skiff-role-name: dummy
     annotations:
-      skiff-exported-properties: '{}'
+      skiff-exported-properties-dummy: '{}'
   status:
     podIP: 1.2.3.4
     containerStatuses:
@@ -46,7 +46,7 @@ pod:
     labels:
       skiff-role-name: unrelated
     annotations:
-      skiff-exported-properties: '{}'
+      skiff-exported-properties-dummy: '{}'
   status:
     podIP: 1.2.3.4
     containerStatuses:

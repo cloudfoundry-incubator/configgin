@@ -5,7 +5,7 @@ pod:
     name: pod-0
     namespace: namespace
     annotations:
-      skiff-exported-properties: '{}'
+      skiff-exported-properties-unused: '{}'
     labels:
       skiff-role-name: fake
   status:
@@ -17,7 +17,7 @@ pod:
     name: other-234z234
     namespace: namespace
     annotations:
-      skiff-exported-properties: '{"provider-job":{"hello":{"world":"ohai"}}}'
+      skiff-exported-properties-provider-job: '{"hello":{"world":"ohai"}}'
     labels:
       skiff-role-name: provider-role
   status:
