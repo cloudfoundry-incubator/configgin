@@ -61,7 +61,7 @@ pod:
       skiff-exported-properties-dummy: '{}'
   status:
     podIP: 1.2.3.4
-    containerStatuses:
+    containerStatuses: ~ # Simulate pending pod
 
 service:
 - metadata:
