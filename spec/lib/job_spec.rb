@@ -108,6 +108,14 @@ describe Job do
       expect(job.spec['bootstrap']).to be_truthy
     end
 
+    it 'should not break bootstrapping a pod in pending status' do
+      allow(ENV).to receive(:[]).and_wrap_original do |env, name|
+        name == 'HOSTNAME' ? 'pending-pod-0' : env.call(name)
+      end
+      job = Job.new(bosh_spec, namespace, client, client)
+      expect(job.spec['containerStatuses']).to be_falsey
+    end
+
     it 'should bootstrap when only pod with this image' do
       allow(ENV).to receive(:[]).and_wrap_original do |env, name|
         name == 'HOSTNAME' ? 'bootstrap-pod-3' : env.call(name)
