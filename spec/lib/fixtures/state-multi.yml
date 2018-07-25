@@ -51,6 +51,17 @@ pod:
     podIP: 1.2.3.4
     containerStatuses:
     - imageID: docker://ccc
+- metadata:
+    uid: 650aa4a8-2034-55c1-gge9-2451d6a2799b
+    name: pending-pod-0
+    namespace: namespace
+    labels:
+      skiff-role-name: pending
+    annotations:
+      skiff-exported-properties-dummy: '{}'
+  status:
+    podIP: 1.2.3.4
+    containerStatuses: ~ # Simulate pending pod
 
 service:
 - metadata:

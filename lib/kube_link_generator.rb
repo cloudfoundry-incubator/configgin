@@ -84,9 +84,11 @@ class KubeLinkSpecs
     sets = Hash.new(0)
     keys = {}
     pods.each do |pod|
-      key = pod.status.containerStatuses.map(&:imageID).sort.join("\n")
-      sets[key] += 1
-      keys[pod.metadata.uid] = key
+      unless pod.status.containerStatuses.nil?
+        key = pod.status.containerStatuses.map(&:imageID).sort.join("\n")
+        sets[key] += 1
+        keys[pod.metadata.uid] = key
+      end
     end
     pods.each do |pod|
       result[pod.metadata.uid] = sets[keys[pod.metadata.uid]]
