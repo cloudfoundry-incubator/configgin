@@ -159,6 +159,7 @@ class KubeLinkSpecs
       instances = get_statefulset_instance_info(provider['role'], provider['job'])
     end
 
+    # Underscores aren't valid hostnames, so jobs are transformed in fissile to use dashes
     job_name = provider['job'].gsub('_', '-')
 
     @links[key] = {
