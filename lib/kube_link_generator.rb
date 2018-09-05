@@ -161,7 +161,7 @@ class KubeLinkSpecs
 
     @links[key] = {
       'address' => "#{provider['role']}.#{ENV['KUBERNETES_NAMESPACE']}.svc.#{ENV['KUBERNETES_CLUSTER_DOMAIN']}",
-      'instance_group' => '',
+      'instance_group' => '', # This is probably the role name from the manifest
       'default_network' => '',
       'deployment_name' => @namespace,
       'domain' => "#{ENV['KUBERNETES_NAMESPACE']}.svc.#{ENV['KUBERNETES_CLUSTER_DOMAIN']}",
