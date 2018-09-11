@@ -169,8 +169,11 @@ class KubeLinkSpecs
       instances = get_statefulset_instance_info(provider['role'], provider['job'])
     end
 
+    # Underscores aren't valid hostnames, so jobs are transformed in fissile to use dashes
+    job_name = provider['job'].gsub('_', '-')
+
     @links[key] = {
-      'address' => "#{provider['role']}.#{ENV['KUBERNETES_NAMESPACE']}.svc.#{ENV['KUBERNETES_CLUSTER_DOMAIN']}",
+      'address' => "#{provider['role']}-#{job_name}.#{ENV['KUBERNETES_NAMESPACE']}.svc.#{ENV['KUBERNETES_CLUSTER_DOMAIN']}",
       'instance_group' => '', # This is probably the role name from the manifest
       'default_network' => '',
       'deployment_name' => namespace,
