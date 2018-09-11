@@ -1,0 +1,29 @@
+# This is the Kubernetes state for kube_link_generator_spec.rb
+# It has a pod that existed before the exported properties annotation had
+# the job name in it
+---
+pod:
+- metadata:
+    uid: 5919ad5d-f09d-4a20-8a26-1081a3c0003e
+    name: old-pod-0
+    namespace: namespace
+    labels:
+      skiff-role-name: dummy
+    annotations:
+      skiff-exported-properties: '{"dummy": {"prop": "a"}}'
+  status:
+    podIP: 192.0.2.1
+    containerStatuses:
+    - imageID: docker://aaa
+- metadata:
+    uid: 225f47c4-cc85-41d4-ade7-4348b233335a
+    name: new-pod-0
+    namespace: namespace
+    labels:
+      skiff-role-name: dummy
+    annotations:
+      skiff-exported-properties-dummy: '{"prop": "b"}'
+  status:
+    podIP: 192.0.2.2
+    containerStatuses:
+    - imageID: docker://bbb

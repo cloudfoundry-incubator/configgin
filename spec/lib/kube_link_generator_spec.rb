@@ -18,9 +18,131 @@ describe KubeLinkSpecs do
         else env.call(name)
         end
       end
+
+      # Make the tests run faster
+      stub_const('KubeLinkSpecs::SLEEP_DURATION', 0)
     end
 
     around(:each) { |ex| trap_error(ex) }
+
+    context :get_pods_for_role do
+      it 'should get the expected pods' do
+        pods = specs.get_pods_for_role('dummy', 'dummy')
+        expect(pods.length).to be 3
+        expect(pods[0].metadata.name).to eq('ready-pod-0')
+        expect(pods[1].metadata.name).to eq('ready-pod-too-0')
+        expect(pods[2].metadata.name).to eq('bootstrap-pod-3')
+      end
+
+      it 'should find pods from before jobs in properties' do
+        client = MockKubeClient.new(fixture('state-jobless-properties.yml'))
+        allow(specs).to receive(:client) { client }
+        pods = specs.get_pods_for_role('dummy', 'dummy')
+        expect(pods.length).to be 2
+        expect(pods[0].metadata.name).to eq('old-pod-0')
+        expect(specs.get_exported_properties(pods[0], 'dummy')).to include('prop' => 'a')
+        expect(pods[1].metadata.name).to eq('new-pod-0')
+        expect(specs.get_exported_properties(pods[1], 'dummy')).to include('prop' => 'b')
+      end
+
+      # Build a client with the given answers (sequentially)
+      # The block will be called with the current index, total count, and the unmodified pods
+      def build_answers
+        max = 10
+        answers = Array.new(max) do |i|
+          client = MockKubeClient.new(fixture('state-jobless-properties.yml'))
+          pods = client.get_pods(namespace: namespace, label_selector: 'skiff-role-name=dummy')
+          yield i, max, pods
+        end
+
+        client = MockKubeClient.new(fixture('state-jobless-properties.yml'))
+        allow(specs).to receive(:client) { client }
+        allow(client).to receive(:get_pods) do
+          expect(answers).not_to be_empty
+          answers.shift
+        end
+
+        answers
+      end
+
+      it 'should wait for pods to be ready' do
+        # Build canned answers where the pods are not ready
+        answers = build_answers do |index, max, pods|
+          if index + 1 < max
+            pods.map! do |pod|
+              # Drop the podIP
+              status = OpenStruct.new(pod.status.to_h.merge(podIP: nil)).freeze
+              OpenStruct.new(pod.to_h.merge(status: status)).freeze
+            end
+          end
+          pods
+        end
+
+        pods = specs.get_pods_for_role('dummy', 'dummy')
+        expect(pods).not_to be_empty
+        expect(answers).to be_empty
+        expect(pods.length).to eq 2
+        expect(pods[0].metadata.name).to eq('old-pod-0')
+        expect(pods[1].metadata.name).to eq('new-pod-0')
+      end
+
+      it 'should wait for all pods to be ready' do
+        # Build canned answers where the pods are not ready
+        answers = build_answers do |index, max, pods|
+          if index + 1 < max
+            pods.map! do |pod|
+              next pod if index % 2 == 0 && pod.metadata.name.start_with?('old')
+              next pod if index % 2 == 1 && pod.metadata.name.start_with?('new')
+              # Drop the podIP
+              status = OpenStruct.new(pod.status.to_h.merge(podIP: nil)).freeze
+              OpenStruct.new(pod.to_h.merge(status: status)).freeze
+            end
+          end
+          pods
+        end
+
+        pods = specs.get_pods_for_role('dummy', 'dummy', wait_for_all: true)
+        expect(pods).not_to be_empty
+        expect(answers).to be_empty
+        expect(pods.length).to eq 2
+        expect(pods[0].metadata.name).to eq('old-pod-0')
+        expect(pods[1].metadata.name).to eq('new-pod-0')
+      end
+
+      it 'should accept the old pod as ready' do
+        answers = build_answers do |_, _, pods|
+          pods.map! do |pod|
+            next pod if pod.metadata.name.start_with? 'old'
+            # Drop the podIP
+            status = OpenStruct.new(pod.status.to_h.merge(podIP: nil)).freeze
+            OpenStruct.new(pod.to_h.merge(status: status)).freeze
+          end
+        end
+
+        pods = specs.get_pods_for_role('dummy', 'dummy')
+        expect(pods).not_to be_empty
+        expect(answers).not_to be_empty # should have only needed the first one
+        expect(pods.length).to eq 1
+        expect(pods[0].metadata.name).to eq('old-pod-0')
+      end
+
+      it 'should accept the new pod as ready' do
+        answers = build_answers do |_, _, pods|
+          pods.map! do |pod|
+            next pod if pod.metadata.name.start_with? 'new'
+            # Drop the podIP
+            status = OpenStruct.new(pod.status.to_h.merge(podIP: nil)).freeze
+            OpenStruct.new(pod.to_h.merge(status: status)).freeze
+          end
+        end
+
+        pods = specs.get_pods_for_role('dummy', 'dummy')
+        expect(pods).not_to be_empty
+        expect(answers).not_to be_empty # should have only needed the first one
+        expect(pods.length).to eq 1
+        expect(pods[0].metadata.name).to eq('new-pod-0')
+      end
+    end
 
     context :get_statefulset_instance_info do
       it 'should return the expected information' do

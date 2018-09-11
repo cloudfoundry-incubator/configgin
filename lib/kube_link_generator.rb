@@ -16,8 +16,11 @@ class KubeLinkSpecs
     @spec = spec || {}
   end
 
+  attr_reader :client, :spec, :namespace
+  SLEEP_DURATION = 1
+
   def this_name
-    @spec['job']['name']
+    spec['job']['name']
   end
 
   # pod_index returns a number for the given pod name. The number is expected to
@@ -34,35 +37,43 @@ class KubeLinkSpecs
   end
 
   def _get_pods_for_role(role_name)
-    @client.get_pods(namespace: @namespace, label_selector: "skiff-role-name=#{role_name}")
+    client.get_pods(namespace: namespace, label_selector: "skiff-role-name=#{role_name}")
   end
 
-  def get_pods_for_role(role_name, wait_for_ip, job)
+  def get_pods_for_role(role_name, job, options = {})
     loop do
       # The 30.times loop exists to print out status messages
       30.times do
         1.times do
           pods = _get_pods_for_role(role_name)
-          if wait_for_ip
-            # Wait until all pods have IP addresses and properties
-            break unless pods.all? { |pod| pod.status.podIP }
-            break unless pods.all? { |pod| pod.metadata.annotations["skiff-exported-properties-#{job}"] }
-          else
-            # We just need one pod with exported properties
-            pods.select! { |pod| pod.status.podIP }
-            pods.select! { |pod| pod.metadata.annotations["skiff-exported-properties-#{job}"] }
+          good_pods = pods.select do |pod|
+            next false unless pod.status.podIP
+            next true if pod.metadata.annotations["skiff-exported-properties-#{job}"]
+            # Fall back to non-job-specific properties, for upgrades from older versions
+            pod.metadata.annotations['skiff-exported-properties']
           end
-          return pods unless pods.empty?
+
+          if options[:wait_for_all]
+            # Wait until all pods have IP addresses and properties
+            break unless good_pods.length == pods.length
+          end
+          return good_pods unless good_pods.empty?
         end
-        sleep 1
+        sleep SLEEP_DURATION
       end
       $stdout.puts "Waiting for pods for role #{role_name} and provider job #{job} (at #{Time.now})..."
+      $stdout.flush
     end
   end
 
   def get_exported_properties(pod, job)
-    exported_properties = pod.metadata.annotations["skiff-exported-properties-#{job}"]
-    exported_properties.nil? ? {} : JSON.parse(exported_properties)
+    if pod.metadata.annotations["skiff-exported-properties-#{job}"]
+      JSON.parse(pod.metadata.annotations["skiff-exported-properties-#{job}"])
+    elsif pod.metadata.annotations["skiff-exported-properties"]
+      JSON.parse(pod.metadata.annotations["skiff-exported-properties"])[job]
+    else
+      {}
+    end
   end
 
   def get_pod_instance_info(pod, job, pods_per_image)
@@ -84,11 +95,10 @@ class KubeLinkSpecs
     sets = Hash.new(0)
     keys = {}
     pods.each do |pod|
-      unless pod.status.containerStatuses.nil?
-        key = pod.status.containerStatuses.map(&:imageID).sort.join("\n")
-        sets[key] += 1
-        keys[pod.metadata.uid] = key
-      end
+      next if pod.status.containerStatuses.nil?
+      key = pod.status.containerStatuses.map(&:imageID).sort.join("\n")
+      sets[key] += 1
+      keys[pod.metadata.uid] = key
     end
     pods.each do |pod|
       result[pod.metadata.uid] = sets[keys[pod.metadata.uid]]
@@ -97,8 +107,8 @@ class KubeLinkSpecs
   end
 
   def get_svc_instance_info(role_name, job)
-    svc = @client.get_service(role_name, @namespace)
-    pod = get_pods_for_role(role_name, false, job).first
+    svc = client.get_service(role_name, namespace)
+    pod = get_pods_for_role(role_name, job).first
     {
       'name' => svc.metadata.name,
       'index' => 0, # Completely made up index; there is only ever one service
@@ -111,8 +121,8 @@ class KubeLinkSpecs
   end
 
   def get_statefulset_instance_info(role_name, job)
-    ss = @client_stateful_set.get_stateful_set(role_name, @namespace)
-    pod = get_pods_for_role(role_name, false, job).first
+    ss = @client_stateful_set.get_stateful_set(role_name, namespace)
+    pod = get_pods_for_role(role_name, job).first
 
     Array.new(ss.spec.replicas) do |i|
       {
@@ -128,7 +138,7 @@ class KubeLinkSpecs
   end
 
   def service?(role_name)
-    @client.get_service(role_name, @namespace)
+    client.get_service(role_name, namespace)
     true
   rescue KubeException
     false
@@ -138,7 +148,7 @@ class KubeLinkSpecs
     return @links[key] if @links.key? key
 
     # Resolve the role we're looking for
-    provider = @spec['consumes'][key]
+    provider = spec['consumes'][key]
     unless provider
       $stderr.puts "No link provider found for #{key}"
       return @links[key] = nil
@@ -146,7 +156,7 @@ class KubeLinkSpecs
 
     if provider['role'] == this_name
       $stderr.puts "Resolving link #{key} via self provider #{provider}"
-      pods = get_pods_for_role(provider['role'], true, provider['job'])
+      pods = get_pods_for_role(provider['role'], provider['job'], wait_for_all: true)
       pods_per_image = get_pods_per_image(pods)
       instances = pods.map { |p| get_pod_instance_info(p, provider['job'], pods_per_image) }
     elsif service? provider['role']
@@ -166,7 +176,7 @@ class KubeLinkSpecs
       'address' => "#{provider['role']}-#{job_name}.#{ENV['KUBERNETES_NAMESPACE']}.svc.#{ENV['KUBERNETES_CLUSTER_DOMAIN']}",
       'instance_group' => '', # This is probably the role name from the manifest
       'default_network' => '',
-      'deployment_name' => @namespace,
+      'deployment_name' => namespace,
       'domain' => "#{ENV['KUBERNETES_NAMESPACE']}.svc.#{ENV['KUBERNETES_CLUSTER_DOMAIN']}",
       'root_domain' => "#{ENV['KUBERNETES_NAMESPACE']}.svc.#{ENV['KUBERNETES_CLUSTER_DOMAIN']}",
       'instances' => instances,
