@@ -56,6 +56,11 @@ job_configs.each do |job, job_config|
     bosh_spec = EnvironmentConfigTransmogrifier.transmogrify(base_config,
                                                              templates,
                                                              secrets: '/etc/secrets')
+
+    if options[:bosh_deployment_manifest]
+      manifest = BoshDeploymentManifest.new(options[:bosh_deployment_manifest])
+      bosh_spec = BoshDeploymentManifestConfigTransmogrifier.transmogrify(bosh_spec, ENV['HOSTNAME'], manifest)
+    end
   rescue NonHashValueOverride => e
     STDERR.puts e.to_s
     STDERR.puts "Error generating #{job}: #{outfile} from #{infile}"

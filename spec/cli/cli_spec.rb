@@ -10,7 +10,7 @@ describe Cli do
 
   context 'with a full config' do
     let(:config) {
-      { jobs: '/tmp/in.file', env2conf: '/tmp/templates.tml' }
+      { jobs: '/tmp/in.file', env2conf: '/tmp/templates.tml', bosh_deployment_manifest: '/tmp/manifest.yml' }
     }
 
     it 'should accept correct arrangements of arguments' do
@@ -31,6 +31,13 @@ describe Cli do
       expect {
         Cli.check_opts(config)
       }.to raise_error(ArgMissingError, 'env2conf')
+    end
+
+    it 'should not fail if the bosh deployment manifest is missing' do
+      config.delete(:bosh_deployment_manifest)
+      expect {
+        Cli.check_opts(config)
+      }.to_not raise_error
     end
 
     it 'should exit when checking version' do
