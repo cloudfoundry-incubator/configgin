@@ -5,10 +5,6 @@ require 'stringio'
 require 'tempfile'
 require 'yaml'
 
-def fixture(relpath)
-  File.join(File.dirname(__FILE__), 'fixtures', relpath)
-end
-
 describe Job do
   context 'with some file paths and an eval context' do
     template_filename = fixture('fake.yml.erb')

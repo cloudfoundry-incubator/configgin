@@ -58,3 +58,7 @@ def trap_error(example)
   end
   result
 end
+
+def fixture(relpath)
+  File.join(File.dirname(__FILE__), 'lib/fixtures', relpath)
+end
