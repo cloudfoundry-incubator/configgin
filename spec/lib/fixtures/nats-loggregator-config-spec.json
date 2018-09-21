@@ -1,0 +1,46 @@
+{
+  "job": {
+      "name": "nats"
+  },
+  "parameters": {},
+  "properties": {
+      "bosh_dns": false,
+      "deployment": "",
+      "disable_udp": false,
+      "doppler": {
+          "addr": "doppler.service.cf.internal",
+          "grpc_port": 8082
+      },
+      "grpc_port": 3458,
+      "health_port": 14824,
+      "listening_address": "127.0.0.1",
+      "listening_port": 3457,
+      "loggregator": {
+          "tls": {
+              "agent": {
+                  "cert": null,
+                  "key": null
+              },
+              "ca_cert": null,
+              "cipher_suites": "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
+          }
+      },
+      "pprof_port": 0,
+      "tags": {},
+      "zone": ""
+  },
+  "networks": {
+      "default": {}
+  },
+  "exported_properties": [
+      "listening_address",
+      "listening_port",
+      "grpc_port"
+  ],
+  "consumes": {
+      "doppler": {
+          "role": "doppler",
+          "job": "doppler"
+      }
+  }
+}

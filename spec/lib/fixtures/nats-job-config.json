@@ -1,0 +1,8 @@
+{
+  "loggregator_agent": {
+    "base": "/var/vcap/jobs-src/loggregator_agent/config_spec.json",
+    "files": {
+      "/var/vcap/jobs-src/loggregator_agent/monit": "/var/vcap/monit/loggregator_agent.monitrc"
+    }
+  }
+}

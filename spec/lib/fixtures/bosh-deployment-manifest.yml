@@ -26,6 +26,9 @@ instance_groups:
     release: zookeeper
     properties:
       foo: bar
+      a:
+        b:
+          c: 1
   - name: status
     release: zookeeper
     properties:

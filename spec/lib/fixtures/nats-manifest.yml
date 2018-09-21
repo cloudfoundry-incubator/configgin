@@ -1,0 +1,45 @@
+---
+name: nats
+
+addons:
+- name: bpm
+  include:
+    stemcell:
+    - os: ubuntu-trusty
+  jobs:
+  - name: bpm
+    release: bpm
+
+releases:
+- name: bpm
+  url: https://bosh.io/d/github.com/cloudfoundry-incubator/bpm-release?v=0.12.2
+  version: 0.12.2
+  sha1: f2edbf3d1417a253205338c9941ca989cd2f8331
+- name: nats
+  version: latest
+
+stemcells:
+- alias: default
+  os: ubuntu-trusty
+  version: latest
+update:
+  canaries: 1
+  max_in_flight: 1
+  canary_watch_time: 1000-30000
+  update_watch_time: 1000-30000
+
+instance_groups:
+- name: nats-server
+  azs: [z1, z2, z3]
+  instances: 3
+  jobs:
+  - name: loggregator
+    release: nats
+    properties:
+      tls:
+        agent:
+          cert: BAR
+
+variables:
+- name: nats_password
+  type: password

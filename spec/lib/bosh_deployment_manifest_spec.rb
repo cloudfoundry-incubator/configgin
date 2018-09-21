@@ -6,6 +6,7 @@ describe BoshDeploymentManifest do
     manifest = described_class.new(File.expand_path('fixtures/bosh-deployment-manifest.yml', __dir__))
     expected_properties = {
       'zookeeper.foo' => 'bar',
+      'zookeeper.a.b.c' => 1,
       'status.number' => 2
     }
 
