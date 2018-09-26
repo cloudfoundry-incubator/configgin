@@ -1,0 +1,2 @@
+properties.loggregator.tls.agent.cert: '"((LOGGREGATOR_AGENT_CERT))"'
+properties.loggregator.tls.agent.key: '"((LOGGREGATOR_AGENT_CERT_KEY))"'

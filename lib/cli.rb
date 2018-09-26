@@ -34,6 +34,11 @@ module Cli
         options[:env2conf] = e
       end
 
+      # Bosh deployment manifest
+      opts.on('-b', '--bosh-deployment-manifest', 'Bosh deployment manifest') do |b|
+        options[:bosh_deployment_manifest] = b
+      end
+
       opts.on('--version', 'Print the configgin version') do
         puts Configgin::VERSION
         exit 0
