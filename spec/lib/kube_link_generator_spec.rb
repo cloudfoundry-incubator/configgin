@@ -51,7 +51,7 @@ describe KubeLinkSpecs do
         max = 10
         answers = Array.new(max) do |i|
           client = MockKubeClient.new(fixture('state-jobless-properties.yml'))
-          pods = client.get_pods(namespace: namespace, label_selector: 'skiff-role-name=dummy')
+          pods = client.get_pods(namespace: namespace, label_selector: 'app.kubernetes.io/component=dummy')
           yield i, max, pods
         end
 

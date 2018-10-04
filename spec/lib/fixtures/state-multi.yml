@@ -6,7 +6,7 @@ pod:
     name: ready-pod-0
     namespace: namespace
     labels:
-      skiff-role-name: dummy
+      app.kubernetes.io/component: dummy
     annotations:
       skiff-exported-properties-dummy: '{}'
   status:
@@ -19,7 +19,7 @@ pod:
     name: ready-pod-too-0
     namespace: namespace
     labels:
-      skiff-role-name: dummy
+      app.kubernetes.io/component: dummy
     annotations:
       skiff-exported-properties-dummy: '{}'
   status:
@@ -32,7 +32,7 @@ pod:
     name: bootstrap-pod-3
     namespace: namespace
     labels:
-      skiff-role-name: dummy
+      app.kubernetes.io/component: dummy
     annotations:
       skiff-exported-properties-dummy: '{}'
   status:
@@ -44,7 +44,7 @@ pod:
     name: unrelated-pod-0
     namespace: namespace
     labels:
-      skiff-role-name: unrelated
+      app.kubernetes.io/component: unrelated
     annotations:
       skiff-exported-properties-dummy: '{}'
   status:
@@ -56,7 +56,7 @@ pod:
     name: pending-pod-0
     namespace: namespace
     labels:
-      skiff-role-name: pending
+      app.kubernetes.io/component: pending
     annotations:
       skiff-exported-properties-dummy: '{}'
   status:

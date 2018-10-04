@@ -3,7 +3,7 @@
 stateful_set:
   - metadata:
       labels:
-        skiff-role-name: dummy
+        app.kubernetes.io/component: dummy
       name: dummy
       namespace: namespace
     spec:
