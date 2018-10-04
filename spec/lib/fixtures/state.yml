@@ -7,7 +7,7 @@ pod:
     annotations:
       skiff-exported-properties-unused: '{}'
     labels:
-      skiff-role-name: fake
+      app.kubernetes.io/component: fake
   status:
     podIP: '192.168.2.67'
     containerStatuses:
@@ -19,7 +19,7 @@ pod:
     annotations:
       skiff-exported-properties-provider-job: '{"hello":{"world":"ohai"}}'
     labels:
-      skiff-role-name: provider-role
+      app.kubernetes.io/component: provider-role
   status:
     podIP: '192.168.2.39'
     containerStatuses:

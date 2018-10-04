@@ -20,7 +20,7 @@ if [ "$(uname)" == "Darwin" ]; then
        --workdir ${WORK_DIR} \
        --entrypoint bash \
        ${DOCKER_RUNTIME} \
-       -l -c "export RBENV_VERSION=2.1.7 && ${BASH_SOURCE[1]}"
+       -l -c "${BASH_SOURCE[1]}"
 
     exit
 fi

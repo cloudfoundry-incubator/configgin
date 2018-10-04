@@ -8,7 +8,7 @@ pod:
     name: old-pod-0
     namespace: namespace
     labels:
-      skiff-role-name: dummy
+      app.kubernetes.io/component: dummy
     annotations:
       skiff-exported-properties: '{"dummy": {"prop": "a"}}'
   status:
@@ -20,7 +20,7 @@ pod:
     name: new-pod-0
     namespace: namespace
     labels:
-      skiff-role-name: dummy
+      app.kubernetes.io/component: dummy
     annotations:
       skiff-exported-properties-dummy: '{"prop": "b"}'
   status:

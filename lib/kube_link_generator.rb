@@ -37,7 +37,7 @@ class KubeLinkSpecs
   end
 
   def _get_pods_for_role(role_name)
-    client.get_pods(namespace: namespace, label_selector: "skiff-role-name=#{role_name}")
+    client.get_pods(namespace: namespace, label_selector: "app.kubernetes.io/component=#{role_name}")
   end
 
   def get_pods_for_role(role_name, job, options = {})
