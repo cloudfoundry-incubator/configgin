@@ -41,8 +41,9 @@ class Configgin
         exit 1
       end
 
-      jobs[job] = Job.new(bosh_spec, @kube_namespace, kube_client, kube_client_stateful_set)
+      jobs[job] = Job.new(bosh_spec, kube_namespace, kube_client, kube_client_stateful_set)
     end
+    jobs
   end
 
   def set_job_metadata(jobs)
@@ -50,7 +51,7 @@ class Configgin
       kube_client.patch_pod(
         ENV['HOSTNAME'],
         { metadata: { annotations: { :"skiff-exported-properties-#{name}" => job.exported_properties.to_json } } },
-        @kube_namespace
+        kube_namespace
       )
     end
   end

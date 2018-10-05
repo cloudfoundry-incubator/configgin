@@ -15,7 +15,7 @@ describe Configgin do
   before(:each) {
     allow(subject).to receive(:set_job_metadata)
     allow(subject).to receive(:render_job_templates)
-    allow(subject).to receive(:kube_namespace).and_return('default')
+    allow(subject).to receive(:kube_namespace).and_return('the-namespace')
     allow(subject).to receive(:kube_token).and_return('abcdefg')
     allow(File).to receive(:read).and_call_original
     allow(File).to receive(:read).with('/var/vcap/jobs-src/loggregator_agent/config_spec.json')
@@ -23,6 +23,11 @@ describe Configgin do
   }
 
   describe '#run' do
+    it 'reads the namespace' do
+      expect(Job).to receive(:new).with(anything, "the-namespace", any_args)
+      subject.run
+    end
+
     it 'uses default values' do
       expect(Job).to receive(:new) do |bosh_spec, *_|
         expect(bosh_spec['properties']['loggregator']['tls']['agent']['cert']). to eq('')
