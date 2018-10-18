@@ -34,7 +34,7 @@ class BoshDeploymentManifest
         inject_properties(properties, job, "#{key}.#{sub_key}", sub_value)
       end
     else
-      properties["#{job['name']}.#{key}"] = value
+      properties[key] = value
     end
   end
 end
