@@ -35,7 +35,7 @@ module Cli
       end
 
       # Bosh deployment manifest
-      opts.on('-b', '--bosh-deployment-manifest file', 'Bosh deployment manifest') do |b|
+      opts.on('-b', '--bosh-deployment-manifest file', 'BOSH deployment manifest') do |b|
         options[:bosh_deployment_manifest] = b
       end
 
