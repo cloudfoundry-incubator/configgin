@@ -10,9 +10,7 @@ describe BoshDeploymentManifestConfigTransmogrifier do
           'templates' => []
         },
         'properties' => {
-          'zookeeper' => {
-            'foo' => 'baz'
-          }
+          'foo' => 'baz'
         }
       }
     }
@@ -24,7 +22,7 @@ describe BoshDeploymentManifestConfigTransmogrifier do
 
       # 'server' is the instance group that is being tested
       new_config = BoshDeploymentManifestConfigTransmogrifier.transmogrify(base_config, 'server', manifest)
-      expect(new_config['properties']['zookeeper']['foo']).to eq('bar')
+      expect(new_config['properties']['foo']).to eq('bar')
     end
   end
 end

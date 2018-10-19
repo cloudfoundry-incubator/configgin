@@ -33,7 +33,7 @@ class Configgin
 
         if @bosh_deployment_manifest
           manifest = BoshDeploymentManifest.new(@bosh_deployment_manifest)
-          bosh_spec = BoshDeploymentManifestConfigTransmogrifier.transmogrify(bosh_spec, ENV['HOSTNAME'], manifest)
+          bosh_spec = BoshDeploymentManifestConfigTransmogrifier.transmogrify(bosh_spec, instance_group, manifest)
         end
       rescue NonHashValueOverride => e
         STDERR.puts e.to_s
@@ -109,5 +109,10 @@ class Configgin
         bearer_token: kube_token
       }
     )
+  end
+
+  def instance_group
+    pod = kube_client.get_pod(ENV['HOSTNAME'], kube_namespace)
+    pod['metadata']['labels']['app.kubernetes.io/component']
   end
 end

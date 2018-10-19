@@ -54,9 +54,9 @@ describe Configgin do
       }
 
       it 'considers values from the bosh manifest' do
-        stub_const('ENV', 'HOSTNAME' => 'nats-server')
+        expect(subject).to receive(:instance_group).and_return('nats-server')
         expect(Job).to receive(:new) do |bosh_spec, *_|
-          expect(bosh_spec['properties']['loggregator']['tls']['agent']['cert']). to eq('BAR')
+          expect(bosh_spec['properties']['tls']['agent']['cert']). to eq('BAR')
         end
 
         subject.run
