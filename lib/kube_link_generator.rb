@@ -78,12 +78,13 @@ class KubeLinkSpecs
 
   def get_pod_instance_info(pod, job, pods_per_image)
     index = pod_index(pod.metadata.name)
+    # Use pod DNS name for address field, instead of IP address which may change
     {
       'name' => pod.metadata.name,
       'index' => index,
       'id' => pod.metadata.name,
       'az' => pod.metadata.annotations['failure-domain.beta.kubernetes.io/zone'] || 'az0',
-      'address' => pod.status.podIP,
+      'address' => "#{pod.metadata.name}.#{pod.spec.subdomain}.#{ENV['KUBERNETES_NAMESPACE']}.svc.#{ENV['KUBERNETES_CLUSTER_DOMAIN']}",
       'properties' => get_exported_properties(pod, job),
       'bootstrap' => pods_per_image[pod.metadata.uid] < 2
     }

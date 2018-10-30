@@ -13,6 +13,8 @@ pod:
     containerStatuses:
     - imageID: docker://image-one
     - imageID: docker://image-two
+  spec:
+    subdomain: provider-role
 - metadata:
     name: other-234z234
     namespace: namespace
