@@ -168,7 +168,7 @@ describe KubeLinkSpecs do
         expect(pod).to_not be_nil
         pods_per_image = specs.get_pods_per_image(pods)
         expect(specs.get_pod_instance_info(pod, job, pods_per_image)).to include(
-          'address'    => '1.2.3.4',
+          'address'    => 'bootstrap-pod-3.provider-role.namespace.svc.domain',
           'az'         => 'az0',
           'bootstrap'  => true,
           'id'         => 'bootstrap-pod-3',

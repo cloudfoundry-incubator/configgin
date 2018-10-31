@@ -9,6 +9,8 @@ pod:
       app.kubernetes.io/component: dummy
     annotations:
       skiff-exported-properties-dummy: '{}'
+  spec:
+    subdomain: provider-role
   status:
     podIP: 1.2.3.4
     containerStatuses:
@@ -35,6 +37,8 @@ pod:
       app.kubernetes.io/component: dummy
     annotations:
       skiff-exported-properties-dummy: '{}'
+  spec:
+    subdomain: provider-role
   status:
     podIP: 1.2.3.4
     containerStatuses:
