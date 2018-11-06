@@ -11,9 +11,10 @@
 
 set -o errexit -o nounset
 
-REPO="${REPO:-scf}"
+REPO="${REPO:-../../github.com/SUSE/scf}"
 
-IMAGE="$( cd "../${REPO}" && source .envrc && echo "${FISSILE_STEMCELL}" )"
+REPO="$( cd "${REPO}" && echo "${PWD}" )"
+IMAGE="$( cd "${REPO}" && source .envrc && echo "${FISSILE_STEMCELL}" )"
 
 name="${IMAGE%%:*}"
 tag="${IMAGE##*:}"
@@ -39,7 +40,7 @@ kubectl config use-context vagrant
 
 vagrant_ready=""
 if test -z "${NO_RUN:-}" ; then
-    if ( cd "$(dirname "$0")/../${REPO}" && (vagrant status 2>/dev/null | grep --quiet running) ) ; then
+    if ( cd "${REPO}" && (vagrant status 2>/dev/null | grep --quiet running) ) ; then
         vagrant_ready="true"
         releases=$(helm list --short)
         if test -n "${releases}" ; then
@@ -84,7 +85,7 @@ docker push "${docker_user}/${name##*/}:${tag}"
 
 test -n "${vagrant_ready}" || exit
 
-cd "$(dirname "$0")/../${REPO}"
+cd "${REPO}"
 
 vagrant ssh -- -tt <<EOF
     set -o errexit -o nounset
