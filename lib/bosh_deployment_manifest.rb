@@ -7,7 +7,7 @@ class BoshDeploymentManifest
   end
 
   def properties_for_instance_group(instance_group_name)
-    return @properties[instance_group] if @properties && @properties[instance_group]
+    return @properties[instance_group_name] if @properties && @properties[instance_group_name]
 
     instance_group = @manifest['instance_groups'].find { |group| group['name'] == instance_group_name }
     return [] unless instance_group
@@ -22,7 +22,7 @@ class BoshDeploymentManifest
     end
 
     @properties ||= {}
-    @properties[instance_group] = properties
+    @properties[instance_group_name] = properties
   end
 
   private
