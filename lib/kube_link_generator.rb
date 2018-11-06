@@ -172,9 +172,10 @@ class KubeLinkSpecs
 
     # Underscores aren't valid hostnames, so jobs are transformed in fissile to use dashes
     job_name = provider['job'].gsub('_', '-')
+    service_name = provider['service_name'] || "#{provider['role']}-#{job_name}"
 
     @links[key] = {
-      'address' => "#{provider['role']}-#{job_name}.#{ENV['KUBERNETES_NAMESPACE']}.svc.#{ENV['KUBERNETES_CLUSTER_DOMAIN']}",
+      'address' => "#{service_name}.#{ENV['KUBERNETES_NAMESPACE']}.svc.#{ENV['KUBERNETES_CLUSTER_DOMAIN']}",
       'instance_group' => '', # This is probably the role name from the manifest
       'default_network' => '',
       'deployment_name' => namespace,
