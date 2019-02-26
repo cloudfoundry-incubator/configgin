@@ -4,6 +4,7 @@ require_relative 'environment_config_transmogrifier'
 require_relative 'bosh_deployment_manifest_config_transmogrifier'
 require_relative 'kube_link_generator'
 require_relative 'bosh_deployment_manifest'
+require_relative 'property_digest'
 
 # Configgin is the main class which puts all the pieces together and configures
 # the container according to the options.
@@ -21,6 +22,7 @@ class Configgin
     jobs = generate_jobs(@job_configs, @templates)
     set_job_metadata(jobs)
     render_job_templates(jobs, @job_configs)
+    restart_affected_pods(jobs)
   end
 
   def generate_jobs(job_configs, templates)
@@ -50,7 +52,12 @@ class Configgin
     jobs.each do |name, job|
       kube_client.patch_pod(
         ENV['HOSTNAME'],
-        { metadata: { annotations: { :"skiff-exported-properties-#{name}" => job.exported_properties.to_json } } },
+        { metadata: {
+          annotations: { 
+            :"skiff-exported-properties-#{name}" => job.exported_properties.to_json,
+            :"skiff-exported-digest-#{name}" => property_digest(job.exported_properties),
+          }
+        } },
         kube_namespace
       )
     end
@@ -64,6 +71,11 @@ class Configgin
         job.generate(infile, outfile, dns_encoder)
       end
     end
+  end
+
+  # Some pods might have depended onthe properties exported by this pod; locate
+  # them and cause them to restart as appropriate.
+  def restart_affected_pods(jobs)
   end
 
   def kube_namespace

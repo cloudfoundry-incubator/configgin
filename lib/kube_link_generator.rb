@@ -1,6 +1,8 @@
+require 'digest/sha1'
 require 'kubeclient'
 require 'uri'
 require_relative 'exceptions'
+require_relative 'property_digest'
 
 # KubeLinkSpecs provides the information required to generate BOSH links by
 # pretending to be a hash.
@@ -66,17 +68,26 @@ class KubeLinkSpecs
     end
   end
 
-  def get_exported_properties(pod, job)
-    if pod.metadata.annotations["skiff-exported-properties-#{job}"]
-      JSON.parse(pod.metadata.annotations["skiff-exported-properties-#{job}"])
+  def get_exported_properties(role_name, pod, job_name)
+    if pod.metadata.annotations["skiff-exported-properties-#{job_name}"]
+      if pod.metadata.annotations["skiff-exported-digest-#{job_name}"]
+        # Copy the digest over, so that if the source role changes we can be restarted
+        digest = pod.metadata.annotations["skiff-exported-digest-#{job_name}"]
+        client.patch_pod(
+          ENV['HOSTNAME'],
+          { metadata: { annotations: { :"skiff-imported-properties-#{role_name}-#{job_name}" => digest } } },
+          namespace
+        )
+      end
+      JSON.parse(pod.metadata.annotations["skiff-exported-properties-#{job_name}"])
     elsif pod.metadata.annotations["skiff-exported-properties"]
-      JSON.parse(pod.metadata.annotations["skiff-exported-properties"])[job]
+      JSON.parse(pod.metadata.annotations["skiff-exported-properties"])[job_name]
     else
       {}
     end
   end
 
-  def get_pod_instance_info(pod, job, pods_per_image)
+  def get_pod_instance_info(role_name, pod, job, pods_per_image)
     index = pod_index(pod.metadata.name)
     # Use pod DNS name for address field, instead of IP address which may change
     {
@@ -85,7 +96,7 @@ class KubeLinkSpecs
       'id' => pod.metadata.name,
       'az' => pod.metadata.annotations['failure-domain.beta.kubernetes.io/zone'] || 'az0',
       'address' => "#{pod.metadata.name}.#{pod.spec.subdomain}.#{ENV['KUBERNETES_NAMESPACE']}.svc.#{ENV['KUBERNETES_CLUSTER_DOMAIN']}",
-      'properties' => get_exported_properties(pod, job),
+      'properties' => get_exported_properties(role_name, pod, job),
       'bootstrap' => pods_per_image[pod.metadata.uid] < 2
     }
   end
@@ -116,7 +127,7 @@ class KubeLinkSpecs
       'id' => svc.metadata.name,
       'az' => pod.metadata.annotations['failure-domain.beta.kubernetes.io/zone'] || 'az0',
       'address' => svc.spec.clusterIP,
-      'properties' => get_exported_properties(pod, job),
+      'properties' => get_exported_properties(role_name, pod, job),
       'bootstrap' => true
     }
   end
@@ -132,7 +143,7 @@ class KubeLinkSpecs
         'id' => ss.metadata.name,
         'az' => pod.metadata.annotations['failure-domain.beta.kubernetes.io/zone'] || 'az0',
         'address' => "#{ss.metadata.name}-#{i}.#{ss.spec.serviceName}",
-        'properties' => get_exported_properties(pod, job),
+        'properties' => get_exported_properties(role_name, pod, job),
         'bootstrap' => i.zero?
       }
     end
@@ -159,7 +170,7 @@ class KubeLinkSpecs
       $stderr.puts "Resolving link #{key} via self provider #{provider}"
       pods = get_pods_for_role(provider['role'], provider['job'], wait_for_all: true)
       pods_per_image = get_pods_per_image(pods)
-      instances = pods.map { |p| get_pod_instance_info(p, provider['job'], pods_per_image) }
+      instances = pods.map { |p| get_pod_instance_info(provider['role'], p, provider['job'], pods_per_image) }
     elsif service? provider['role']
       # Getting pods for a different service; since we have kube services, we don't handle it in configgin
       $stderr.puts "Resolving link #{key} via service #{provider}"

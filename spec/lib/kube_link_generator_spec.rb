@@ -40,9 +40,9 @@ describe KubeLinkSpecs do
         pods = specs.get_pods_for_role('dummy', 'dummy')
         expect(pods.length).to be 2
         expect(pods[0].metadata.name).to eq('old-pod-0')
-        expect(specs.get_exported_properties(pods[0], 'dummy')).to include('prop' => 'a')
+        expect(specs.get_exported_properties('dummy-role', pods[0], 'dummy')).to include('prop' => 'a')
         expect(pods[1].metadata.name).to eq('new-pod-0')
-        expect(specs.get_exported_properties(pods[1], 'dummy')).to include('prop' => 'b')
+        expect(specs.get_exported_properties('dummy-role', pods[1], 'dummy')).to include('prop' => 'b')
       end
 
       # Build a client with the given answers (sequentially)
@@ -162,12 +162,13 @@ describe KubeLinkSpecs do
 
     context :get_pod_instance_info do
       it 'should return the expected information' do
+        role = 'dummy-role'
         job = 'dummy'
         pods = specs._get_pods_for_role(job)
         pod = pods.find { |p| p.metadata.name.start_with? 'bootstrap-pod' }
         expect(pod).to_not be_nil
         pods_per_image = specs.get_pods_per_image(pods)
-        expect(specs.get_pod_instance_info(pod, job, pods_per_image)).to include(
+        expect(specs.get_pod_instance_info(role, pod, job, pods_per_image)).to include(
           'address'    => 'bootstrap-pod-3.provider-role.namespace.svc.domain',
           'az'         => 'az0',
           'bootstrap'  => true,
@@ -178,12 +179,13 @@ describe KubeLinkSpecs do
         )
       end
       it 'should not be bootstrap with multiple pods of the same images' do
+        role = 'dummy-role'
         job = 'dummy'
         pods = specs._get_pods_for_role(job)
         pod = pods.find { |p| p.metadata.name.start_with? 'ready-pod-0' }
         expect(pod).to_not be_nil
         pods_per_image = specs.get_pods_per_image(pods)
-        instance_info = specs.get_pod_instance_info(pod, job, pods_per_image)
+        instance_info = specs.get_pod_instance_info(role, pod, job, pods_per_image)
         expect(instance_info['bootstrap']).not_to be_truthy
       end
     end

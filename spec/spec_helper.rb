@@ -44,6 +44,9 @@ class MockKubeClient
   def initialize(file_name)
     @state = _convert_ostruct(YAML.load_file(file_name))
   end
+
+  def patch_pod(name, patch, namespace)
+  end
 end
 
 def trap_error(example)
