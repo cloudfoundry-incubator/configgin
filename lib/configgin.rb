@@ -14,10 +14,10 @@ class Configgin
   # SVC_ACC_PATH is the location of the service account secrets
   SVC_ACC_PATH = '/var/run/secrets/kubernetes.io/serviceaccount'.freeze
 
-  def initialize(options)
-    @job_configs = JSON.parse(File.read(options[:jobs]))
-    @templates = YAML.load_file(options[:env2conf])
-    @bosh_deployment_manifest = options[:bosh_deployment_manifest]
+  def initialize(jobs:, env2conf:, bosh_deployment_manifest:)
+    @job_configs = JSON.parse(File.read(jobs))
+    @templates = YAML.load_file(env2conf)
+    @bosh_deployment_manifest = bosh_deployment_manifest
   end
 
   def run

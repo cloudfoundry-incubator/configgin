@@ -5,7 +5,8 @@ describe Configgin do
   let(:options) {
     {
       jobs: fixture('nats-job-config.json'),
-      env2conf: fixture('nats-env2conf.yml')
+      env2conf: fixture('nats-env2conf.yml'),
+      bosh_deployment_manifest: nil,
     }
   }
   let(:client) {
