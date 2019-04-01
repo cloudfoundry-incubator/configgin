@@ -34,3 +34,8 @@ service:
     namespace: the-namespace
   spec:
     clusterIP: '192.168.2.221'
+
+stateful_set:
+- metadata:
+    name: debugger
+    namespace: the-namespace

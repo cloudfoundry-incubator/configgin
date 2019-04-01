@@ -9,6 +9,22 @@ class MockKubeClient
     items.first
   end
 
+  def _patch_single(type, name, patch, namespace = nil)
+    object = _get_single(type, name, namespace)
+    fail %Q[Could not find #{type} "#{namespace}/#{name}" to patch] unless object
+    def patch_object(object, patch)
+      patch.each_pair do |k, v|
+        if v.is_a? Hash
+          object[k] = patch_object(object[k] || OpenStruct.new, v)
+        else
+          object[k] = v
+        end
+      end
+      object
+    end
+    patch_object object, patch
+  end
+
   def _get_multiple(type, filters = {})
     items = (@state[type] || []).dup
     items.select! { |i| i.metadata.namespace == filters[:namespace] } unless filters[:namespace].nil?
@@ -24,6 +40,10 @@ class MockKubeClient
       type = name.to_s.sub(/^get_/, '').sub(/s$/, '')
       return _get_multiple(type, *args) if name.to_s.end_with? 's'
       return _get_single(type, *args)
+    elsif name.to_s.start_with? 'patch_'
+      type = name.to_s.sub(/^patch_/, '').sub(/s$/, '')
+      fail "Don't know how to patch multiple #{type}s: #{name}" if name.to_s.end_with? 's'
+      return _patch_single(type, *args)
     end
     super
   end
@@ -36,16 +56,18 @@ class MockKubeClient
   # _convert_ostruct takes an object and recursively converts any
   # encountered hashes to an ostruct
   def _convert_ostruct(obj)
-    return OpenStruct.new(Hash[obj.map { |k, v| [k, _convert_ostruct(v)] }]).freeze if obj.is_a?(Hash)
-    return obj.map { |v| _convert_ostruct(v) }.freeze if obj.is_a?(Array)
-    obj
+    case obj
+    when Hash, OpenStruct
+      OpenStruct.new(Hash[obj.map { |k, v| [k, _convert_ostruct(v)] }])
+    when Array
+      obj.map { |v| _convert_ostruct(v) }
+    else
+      obj
+    end
   end
 
   def initialize(file_name)
     @state = _convert_ostruct(YAML.load_file(file_name))
-  end
-
-  def patch_pod(name, patch, namespace)
   end
 end
 

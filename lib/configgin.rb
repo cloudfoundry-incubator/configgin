@@ -14,10 +14,11 @@ class Configgin
   # SVC_ACC_PATH is the location of the service account secrets
   SVC_ACC_PATH = '/var/run/secrets/kubernetes.io/serviceaccount'.freeze
 
-  def initialize(jobs:, env2conf:, bosh_deployment_manifest:)
+  def initialize(jobs:, env2conf:, bosh_deployment_manifest:, self_name: ENV['HOSTNAME'])
     @job_configs = JSON.parse(File.read(jobs))
     @templates = YAML.load_file(env2conf)
     @bosh_deployment_manifest = bosh_deployment_manifest
+    @self_name = self_name
   end
 
   def run
@@ -49,7 +50,8 @@ class Configgin
         spec: bosh_spec,
         namespace: kube_namespace,
         client: kube_client,
-        client_stateful_set: kube_client_stateful_set)
+        client_stateful_set: kube_client_stateful_set,
+        self_name: @self_name)
     end
     jobs
   end
@@ -60,7 +62,7 @@ class Configgin
     jobs.each do |name, job|
       digest = property_digest(job.exported_properties)
       kube_client.patch_pod(
-        ENV['HOSTNAME'],
+        @self_name,
         { metadata: {
           annotations: {
             :"skiff-exported-properties-#{name}" => job.exported_properties.to_json,
@@ -163,7 +165,7 @@ class Configgin
   end
 
   def instance_group
-    pod = kube_client.get_pod(ENV['HOSTNAME'], kube_namespace)
+    pod = kube_client.get_pod(@self_name, kube_namespace)
     pod['metadata']['labels']['app.kubernetes.io/component']
   end
 end

@@ -44,7 +44,7 @@
       }
   },
   "consumed_by": {
-      "nats-cli": [
+      "loggregator_agent": [
           {
             "role": "debugger",
             "job": "troubleshooter",
