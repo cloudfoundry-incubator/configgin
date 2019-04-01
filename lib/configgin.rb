@@ -45,7 +45,11 @@ class Configgin
         exit 1
       end
 
-      jobs[job] = Job.new(bosh_spec, kube_namespace, kube_client, kube_client_stateful_set)
+      jobs[job] = Job.new(
+        spec: bosh_spec,
+        namespace: kube_namespace,
+        client: kube_client,
+        client_stateful_set: kube_client_stateful_set)
     end
     jobs
   end
@@ -67,7 +71,6 @@ class Configgin
       )
       digests[name] = digest
     end
-    puts "Got digests #{digests.inspect}"
     digests
   end
 
@@ -133,13 +136,14 @@ class Configgin
 
   private
 
-  def kube_client
-    @kube_client ||= Kubeclient::Client.new(
+  def create_kube_client(path: nil, version: 'v1')
+    Kubeclient::Client.new(
       URI::HTTPS.build(
         host: ENV['KUBERNETES_SERVICE_HOST'],
-        port: ENV['KUBERNETES_SERVICE_PORT_HTTPS']
+        port: ENV['KUBERNETES_SERVICE_PORT_HTTPS'],
+        path: path
       ),
-      'v1',
+      version,
       ssl_options: {
         ca_file: "#{SVC_ACC_PATH}/ca.crt",
         verify_ssl: OpenSSL::SSL::VERIFY_PEER
@@ -150,22 +154,12 @@ class Configgin
     )
   end
 
+  def kube_client
+    @kube_client ||= create_kube_client
+  end
+
   def kube_client_stateful_set
-    @kube_client_stateful_set ||= Kubeclient::Client.new(
-      URI::HTTPS.build(
-        host: ENV['KUBERNETES_SERVICE_HOST'],
-        port: ENV['KUBERNETES_SERVICE_PORT_HTTPS'],
-        path: '/apis/apps'
-      ),
-      'v1',
-      ssl_options: {
-        ca_file: "#{SVC_ACC_PATH}/ca.crt",
-        verify_ssl: OpenSSL::SSL::VERIFY_PEER
-      },
-      auth_options: {
-        bearer_token: kube_token
-      }
-    )
+    @kube_client_stateful_set ||= create_kube_client(path: '/apis/apps')
   end
 
   def instance_group

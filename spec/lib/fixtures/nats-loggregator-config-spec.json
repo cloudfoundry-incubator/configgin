@@ -42,5 +42,14 @@
           "role": "doppler",
           "job": "doppler"
       }
+  },
+  "consumed_by": {
+      "nats-cli": [
+          {
+            "role": "debugger",
+            "job": "troubleshooter",
+            "service_name": "nats-nats_cli"
+          }
+      ]
   }
 }

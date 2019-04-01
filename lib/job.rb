@@ -4,10 +4,11 @@ require_relative 'kube_link_generator'
 
 # Job describes a single BOSH job
 class Job
-  def initialize(spec, namespace, client, client_stateful_set)
+  def initialize(spec:, namespace:, client:, client_stateful_set:, self_name: ENV['HOSTNAME'])
     @spec = spec
     @namespace = namespace
     @client = client
+    @self_name = self_name
     links = @spec['links'] = KubeLinkSpecs.new(@spec, @namespace, @client, client_stateful_set)
 
     # Figure out whether _this_ should bootstrap
@@ -36,7 +37,7 @@ class Job
   end
 
   def self_pod
-    @self_pod ||= @client.get_pod(ENV['HOSTNAME'], @namespace)
+    @self_pod ||= @client.get_pod(@self_name, @namespace)
   end
 
   def self_role

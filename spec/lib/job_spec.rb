@@ -13,7 +13,7 @@ describe Job do
     expect_output = File.read(fixture('fake.yml'))
 
     let(:client) { MockKubeClient.new(fixture('state.yml')) }
-    subject(:job) { Job.new(bosh_spec, 'namespace', client, client) }
+    subject(:job) { Job.new(spec: bosh_spec, namespace: 'the-namespace', client: client, client_stateful_set: client, self_name: 'pod-0') }
 
     before do
       allow(ENV).to receive(:[]).and_wrap_original do |env, name|
@@ -98,34 +98,22 @@ describe Job do
     around(:each) { |ex| trap_error(ex) }
 
     it 'should bootstrap when pod is alone' do
-      allow(ENV).to receive(:[]).and_wrap_original do |env, name|
-        name == 'HOSTNAME' ? 'unrelated-pod-0' : env.call(name)
-      end
-      job = Job.new(bosh_spec, namespace, client, client)
+      job = Job.new(spec: bosh_spec, namespace: namespace, client: client, client_stateful_set: client, self_name: 'unrelated-pod-0')
       expect(job.spec['bootstrap']).to be_truthy
     end
 
     it 'should not break bootstrapping a pod in pending status' do
-      allow(ENV).to receive(:[]).and_wrap_original do |env, name|
-        name == 'HOSTNAME' ? 'pending-pod-0' : env.call(name)
-      end
-      job = Job.new(bosh_spec, namespace, client, client)
+      job = Job.new(spec: bosh_spec, namespace: namespace, client: client, client_stateful_set: client, self_name: 'pending-pod-0')
       expect(job.spec['containerStatuses']).to be_falsey
     end
 
     it 'should bootstrap when only pod with this image' do
-      allow(ENV).to receive(:[]).and_wrap_original do |env, name|
-        name == 'HOSTNAME' ? 'bootstrap-pod-3' : env.call(name)
-      end
-      job = Job.new(bosh_spec, namespace, client, client)
+      job = Job.new(spec: bosh_spec, namespace: namespace, client: client, client_stateful_set: client, self_name: 'bootstrap-pod-3')
       expect(job.spec['bootstrap']).to be_truthy
     end
 
     it 'shoud not upgrade when multiple pods with same image' do
-      allow(ENV).to receive(:[]).and_wrap_original do |env, name|
-        name == 'HOSTNAME' ? 'ready-pod-0' : env.call(name)
-      end
-      job = Job.new(bosh_spec, namespace, client, client)
+      job = Job.new(spec: bosh_spec, namespace: namespace, client: client, client_stateful_set: client, self_name: 'ready-pod-0')
       expect(job.spec['bootstrap']).to be_falsy
     end
   end
