@@ -1,3 +1,5 @@
+require 'json'
+
 require_relative 'cli'
 require_relative 'job'
 require_relative 'environment_config_transmogrifier'
@@ -20,9 +22,9 @@ class Configgin
 
   def run
     jobs = generate_jobs(@job_configs, @templates)
-    set_job_metadata(jobs)
+    job_digests = set_job_metadata(jobs)
     render_job_templates(jobs, @job_configs)
-    restart_affected_pods(jobs)
+    restart_affected_pods(@job_configs, job_digests)
   end
 
   def generate_jobs(job_configs, templates)
@@ -48,19 +50,25 @@ class Configgin
     jobs
   end
 
+  # Set the exported properties and their digests, and return the digests
   def set_job_metadata(jobs)
+    digests = Hash.new
     jobs.each do |name, job|
+      digest = property_digest(job.exported_properties)
       kube_client.patch_pod(
         ENV['HOSTNAME'],
         { metadata: {
-          annotations: { 
+          annotations: {
             :"skiff-exported-properties-#{name}" => job.exported_properties.to_json,
-            :"skiff-exported-digest-#{name}" => property_digest(job.exported_properties),
+            :"skiff-exported-digest-#{name}" => digest,
           }
         } },
         kube_namespace
       )
+      digests[name] = digest
     end
+    puts "Got digests #{digests.inspect}"
+    digests
   end
 
   def render_job_templates(jobs, job_configs)
@@ -75,7 +83,44 @@ class Configgin
 
   # Some pods might have depended onthe properties exported by this pod; locate
   # them and cause them to restart as appropriate.
-  def restart_affected_pods(jobs)
+  def restart_affected_pods(job_configs, job_digests)
+    fail "No digest" if job_digests.nil?
+    instance_groups_to_examine = Hash.new { |h, k| h[k] = Hash.new }
+    job_configs.each do |job, job_config|
+      base_config = JSON.parse(File.read(job_config['base']))
+      base_config['consumed_by'].each_pair do |provider_name, consumer_jobs|
+        consumer_jobs.each do |consumer_job|
+          digest_key = "skiff-imported-properties-#{instance_group}-#{provider_name}"
+          instance_groups_to_examine[consumer_job['role']][digest_key] = job_digests[provider_name]
+        end
+      end
+    end
+
+    instance_groups_to_examine.each_pair do |instance_group_name, digests|
+      begin
+        kube_client_stateful_set.patch_stateful_set(
+          instance_group_name,
+          { spec: { template: { metadata: { annotations: digests } } } },
+          kube_namespace
+        )
+        puts "Patched StatefulSet #{instance_group_name} for new exported digests"
+      rescue KubeException => e
+        begin
+          response = begin
+            JSON.parse(e.response || '') || {}
+          rescue JSON::ParseError
+            {}
+          end
+          if response['reason'] == 'NotFound'
+            # The StatefulSet can be missing if we're configured to not have an optional instance group
+            puts "Skipping patch of non-existant StatefulSet #{instance_group_name}"
+            next
+          end
+          puts "Error patching #{instance_group_name}: #{response.to_json}"
+          raise
+        end
+      end
+    end
   end
 
   def kube_namespace
@@ -112,7 +157,7 @@ class Configgin
         port: ENV['KUBERNETES_SERVICE_PORT_HTTPS'],
         path: '/apis/apps'
       ),
-      'v1beta1',
+      'v1',
       ssl_options: {
         ca_file: "#{SVC_ACC_PATH}/ca.crt",
         verify_ssl: OpenSSL::SSL::VERIFY_PEER

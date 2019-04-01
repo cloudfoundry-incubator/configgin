@@ -19,21 +19,20 @@ class Job
   attr_reader :spec
 
   def exported_properties
-    return @exported_propertes if @exported_properties
-    exported_properties = {}
-    spec['exported_properties'].each do |prop|
-      src = spec['properties']
-      dst = exported_properties
-      keys = prop.split('.')
-      leaf = keys.pop
-      keys.each do |key|
-        dst[key] ||= {}
-        dst = dst[key]
-        src = src.fetch(key, {})
+    @exported_properties ||= Hash.new.tap do |exported_properties|
+      spec['exported_properties'].each do |prop|
+        src = spec['properties']
+        dst = exported_properties
+        keys = prop.split('.')
+        leaf = keys.pop
+        keys.each do |key|
+          dst[key] ||= {}
+          dst = dst[key]
+          src = src.fetch(key, {})
+        end
+        dst[leaf] = src[leaf]
       end
-      dst[leaf] = src[leaf]
     end
-    @exported_properties = exported_properties
   end
 
   def self_pod

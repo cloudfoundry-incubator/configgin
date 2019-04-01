@@ -15,7 +15,5 @@ def property_digest(properties)
         end
     end
     json = normalize_object(properties).to_json
-    digest = Digest::SHA1.hexdigest(json)
-    STDERR.puts "Digesting #{properties.to_json} -> #{json} -> #{digest}"
-    digest
+    "sha1:#{Digest::SHA1.hexdigest(json)}"
 end

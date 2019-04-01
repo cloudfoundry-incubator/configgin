@@ -2,7 +2,6 @@ require 'digest/sha1'
 require 'kubeclient'
 require 'uri'
 require_relative 'exceptions'
-require_relative 'property_digest'
 
 # KubeLinkSpecs provides the information required to generate BOSH links by
 # pretending to be a hash.
