@@ -26,7 +26,7 @@ describe Configgin do
     allow(subject).to receive(:instance_group).and_return('instance-group')
     allow(File).to receive(:read).and_call_original
     allow(File).to receive(:read).with('/var/vcap/jobs-src/loggregator_agent/config_spec.json')
-      .and_return(File.read(fixture('nats-loggregator-config-spec.json')))
+                                 .and_return(File.read(fixture('nats-loggregator-config-spec.json')))
   }
 
   describe '#run' do

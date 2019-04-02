@@ -11,18 +11,15 @@ class MockKubeClient
 
   def _patch_single(type, name, patch, namespace = nil)
     object = _get_single(type, name, namespace)
-    fail %Q[Could not find #{type} "#{namespace}/#{name}" to patch] unless object
-    def patch_object(object, patch)
-      patch.each_pair do |k, v|
-        if v.is_a? Hash
-          object[k] = patch_object(object[k] || OpenStruct.new, v)
-        else
-          object[k] = v
-        end
+    raise %(Could not find #{type} "#{namespace}/#{name}" to patch) unless object
+
+    patch_object = lambda do |child_obj, child_patch|
+      child_patch.each_pair do |k, v|
+        child_obj[k] = v.is_a?(Hash) ? patch_object.call(child_obj[k] || OpenStruct.new, v) : v
       end
-      object
+      child_obj
     end
-    patch_object object, patch
+    patch_object.call object, patch
   end
 
   def _get_multiple(type, filters = {})
@@ -39,10 +36,12 @@ class MockKubeClient
     if name.to_s.start_with? 'get_'
       type = name.to_s.sub(/^get_/, '').sub(/s$/, '')
       return _get_multiple(type, *args) if name.to_s.end_with? 's'
+
       return _get_single(type, *args)
     elsif name.to_s.start_with? 'patch_'
       type = name.to_s.sub(/^patch_/, '').sub(/s$/, '')
-      fail "Don't know how to patch multiple #{type}s: #{name}" if name.to_s.end_with? 's'
+      raise "Don't know how to patch multiple #{type}s: #{name}" if name.to_s.end_with? 's'
+
       return _patch_single(type, *args)
     end
     super
@@ -50,6 +49,7 @@ class MockKubeClient
 
   def respond_to_missing?(method_name, include_private = false)
     return true if method_name.to_s.start_with? 'get_'
+
     super
   end
 

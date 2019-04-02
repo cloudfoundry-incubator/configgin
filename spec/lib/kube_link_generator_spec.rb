@@ -91,8 +91,9 @@ describe KubeLinkSpecs do
         answers = build_answers do |index, max, pods|
           if index + 1 < max
             pods.map! do |pod|
-              next pod if index % 2 == 0 && pod.metadata.name.start_with?('old')
-              next pod if index % 2 == 1 && pod.metadata.name.start_with?('new')
+              next pod if index.even? && pod.metadata.name.start_with?('old')
+              next pod if index.odd?  && pod.metadata.name.start_with?('new')
+
               # Drop the podIP
               status = OpenStruct.new(pod.status.to_h.merge(podIP: nil)).freeze
               OpenStruct.new(pod.to_h.merge(status: status)).freeze
@@ -113,6 +114,7 @@ describe KubeLinkSpecs do
         answers = build_answers do |_, _, pods|
           pods.map! do |pod|
             next pod if pod.metadata.name.start_with? 'old'
+
             # Drop the podIP
             status = OpenStruct.new(pod.status.to_h.merge(podIP: nil)).freeze
             OpenStruct.new(pod.to_h.merge(status: status)).freeze
@@ -130,6 +132,7 @@ describe KubeLinkSpecs do
         answers = build_answers do |_, _, pods|
           pods.map! do |pod|
             next pod if pod.metadata.name.start_with? 'new'
+
             # Drop the podIP
             status = OpenStruct.new(pod.status.to_h.merge(podIP: nil)).freeze
             OpenStruct.new(pod.to_h.merge(status: status)).freeze

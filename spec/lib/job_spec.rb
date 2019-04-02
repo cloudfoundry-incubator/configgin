@@ -42,9 +42,9 @@ describe Job do
           job.generate(restricted_file_duplicate, file.path, nil)
 
           # Assert
-          expect(format('%o', File.stat(file.path).mode)).to eq('100600')
+          expect(format('%<mode>o', mode: File.stat(file.path).mode)).to eq('100600')
         ensure
-          file.unlink unless file.nil?
+          file&.unlink
         end
       end
     end
@@ -61,7 +61,7 @@ describe Job do
         # Assert (compare with expect_filename)
         expect(File.read(file)).to eq(expect_output)
       ensure
-        file.unlink unless file.nil?
+        file&.unlink
       end
     end
 

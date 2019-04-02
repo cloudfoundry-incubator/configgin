@@ -23,7 +23,7 @@ class Configgin
 
   def run
     jobs = generate_jobs(@job_configs, @templates)
-    job_digests = set_job_metadata(jobs)
+    job_digests = patch_job_metadata(jobs)
     render_job_templates(jobs, @job_configs)
     restart_affected_pods(@job_configs, job_digests)
   end
@@ -51,14 +51,15 @@ class Configgin
         namespace: kube_namespace,
         client: kube_client,
         client_stateful_set: kube_client_stateful_set,
-        self_name: @self_name)
+        self_name: @self_name
+      )
     end
     jobs
   end
 
   # Set the exported properties and their digests, and return the digests
-  def set_job_metadata(jobs)
-    digests = Hash.new
+  def patch_job_metadata(jobs)
+    digests = {}
     jobs.each do |name, job|
       digest = property_digest(job.exported_properties)
       kube_client.patch_pod(
@@ -66,7 +67,7 @@ class Configgin
         { metadata: {
           annotations: {
             :"skiff-exported-properties-#{name}" => job.exported_properties.to_json,
-            :"skiff-exported-digest-#{name}" => digest,
+            :"skiff-exported-digest-#{name}" => digest
           }
         } },
         kube_namespace
@@ -89,9 +90,10 @@ class Configgin
   # Some pods might have depended onthe properties exported by this pod; locate
   # them and cause them to restart as appropriate.
   def restart_affected_pods(job_configs, job_digests)
-    fail "No digest" if job_digests.nil?
-    instance_groups_to_examine = Hash.new { |h, k| h[k] = Hash.new }
-    job_configs.each do |job, job_config|
+    raise 'No digest' unless job_digests
+
+    instance_groups_to_examine = Hash.new { |h, k| h[k] = {} }
+    job_configs.values.each do |job_config|
       base_config = JSON.parse(File.read(job_config['base']))
       base_config['consumed_by'].each_pair do |provider_name, consumer_jobs|
         consumer_jobs.each do |consumer_job|
@@ -108,20 +110,22 @@ class Configgin
           { spec: { template: { metadata: { annotations: digests } } } },
           kube_namespace
         )
-        puts "Patched StatefulSet #{instance_group_name} for new exported digests"
+        warn "Patched StatefulSet #{instance_group_name} for new exported digests"
       rescue KubeException => e
         begin
+          # rubocop:disable Layout/RescueEnsureAlignment
           response = begin
             JSON.parse(e.response || '') || {}
           rescue JSON::ParseError
             {}
           end
+          # rubocop:enable Layout/RescueEnsureAlignment
           if response['reason'] == 'NotFound'
             # The StatefulSet can be missing if we're configured to not have an optional instance group
-            puts "Skipping patch of non-existant StatefulSet #{instance_group_name}"
+            warn "Skipping patch of non-existant StatefulSet #{instance_group_name}"
             next
           end
-          puts "Error patching #{instance_group_name}: #{response.to_json}"
+          warn "Error patching #{instance_group_name}: #{response.to_json}"
           raise
         end
       end

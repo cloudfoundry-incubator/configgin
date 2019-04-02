@@ -207,7 +207,7 @@ describe EnvironmentConfigTransmogrifier do
 
     it 'should ignore a secrets file' do
       # Arrange
-      allow(EnvironmentConfigTransmogrifier).to receive(:extendReplace) {}
+      allow(EnvironmentConfigTransmogrifier).to receive(:extend_replace) {}
       environment_templates = {}
 
       Dir.mktmpdir do |tmp|
@@ -220,20 +220,20 @@ describe EnvironmentConfigTransmogrifier do
         EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates,
                                                      secrets: secrets)
         # Asserts
-        expect(EnvironmentConfigTransmogrifier).to receive(:extendReplace).exactly(0).times
+        expect(EnvironmentConfigTransmogrifier).to receive(:extend_replace).exactly(0).times
       end
     end
 
     it 'should ignore a nil secrets' do
       # Arrange
-      allow(EnvironmentConfigTransmogrifier).to receive(:extendReplace) {}
+      allow(EnvironmentConfigTransmogrifier).to receive(:extend_replace) {}
       environment_templates = {}
 
       # Act
       EnvironmentConfigTransmogrifier.transmogrify(@base_config, environment_templates,
                                                    secrets: nil)
       # Asserts
-      expect(EnvironmentConfigTransmogrifier).to receive(:extendReplace).exactly(0).times
+      expect(EnvironmentConfigTransmogrifier).to receive(:extend_replace).exactly(0).times
     end
 
     it 'should recursively resolve subtitutions' do

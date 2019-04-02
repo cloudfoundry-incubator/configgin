@@ -20,7 +20,7 @@ class Job
   attr_reader :spec
 
   def exported_properties
-    @exported_properties ||= Hash.new.tap do |exported_properties|
+    @exported_properties ||= {}.tap do |exported_properties|
       spec['exported_properties'].each do |prop|
         src = spec['properties']
         dst = exported_properties
@@ -82,7 +82,7 @@ class Job
       out_file = nil
       raise "failed to open output file #{output_file_path}: #{e}"
     ensure
-      out_file.close unless out_file.nil?
+      out_file&.close
     end
   end
 end
