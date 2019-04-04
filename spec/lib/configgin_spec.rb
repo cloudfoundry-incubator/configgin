@@ -147,6 +147,15 @@ describe Configgin do
         }
       )
     end
+    it 'should do nothing with older job configs' do
+      patched_spec = JSON.parse(File.read(fixture('nats-loggregator-config-spec.json')))
+      patched_spec.delete 'consumed_by'
+      allow(File).to receive(:read).with('/var/vcap/jobs-src/loggregator_agent/config_spec.json')
+                                   .and_return(patched_spec.to_json)
+      expect do
+        subject.expected_annotations(job_configs, job_digests)
+      end.not_to raise_error
+    end
   end
 
   describe '#restart_affected_pods' do
