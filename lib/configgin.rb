@@ -25,7 +25,7 @@ class Configgin
     jobs = generate_jobs(@job_configs, @templates)
     job_digests = patch_job_metadata(jobs)
     render_job_templates(jobs, @job_configs)
-    restart_affected_pods(@job_configs, job_digests)
+    restart_affected_pods expected_annotations(@job_configs, job_digests)
   end
 
   def generate_jobs(job_configs, templates)
@@ -89,23 +89,11 @@ class Configgin
     end
   end
 
-  # Some pods might have depended on the properties exported by this pod; locate
-  # them and cause them to restart as appropriate.
-  def restart_affected_pods(job_configs, job_digests)
-    raise 'No digest' unless job_digests
-
-    instance_groups_to_examine = Hash.new { |h, k| h[k] = {} }
-    job_configs.values.each do |job_config|
-      base_config = JSON.parse(File.read(job_config['base']))
-      base_config['consumed_by'].each_pair do |provider_name, consumer_jobs|
-        consumer_jobs.each do |consumer_job|
-          digest_key = "skiff-imported-properties-#{instance_group}-#{provider_name}"
-          instance_groups_to_examine[consumer_job['role']][digest_key] = job_digests[provider_name]
-        end
-      end
-    end
-
-    instance_groups_to_examine.each_pair do |instance_group_name, digests|
+  # Some pods might have depended on the properties exported by this pod; given
+  # the annotations expected on the pods (keyed by the instance group name),
+  # patch the StatefulSets such that they will be restarted.
+  def restart_affected_pods(expected_annotations)
+    expected_annotations.each_pair do |instance_group_name, digests|
       begin
         kube_client_stateful_set.patch_stateful_set(
           instance_group_name,
@@ -115,13 +103,11 @@ class Configgin
         warn "Patched StatefulSet #{instance_group_name} for new exported digests"
       rescue KubeException => e
         begin
-          # rubocop:disable Layout/RescueEnsureAlignment
-          response = begin
-            JSON.parse(e.response || '') || {}
+          begin
+            response = JSON.parse(e.response || '')
           rescue JSON::ParseError
-            {}
+            response = {}
           end
-          # rubocop:enable Layout/RescueEnsureAlignment
           if response['reason'] == 'NotFound'
             # The StatefulSet can be missing if we're configured to not have an
             # optional instance group.
@@ -133,6 +119,23 @@ class Configgin
         end
       end
     end
+  end
+
+  # Given the active jobs, and a hash of the expected annotations for each,
+  # return the annotations we expect to be on each pod based on what properties
+  # each job imports.
+  def expected_annotations(job_configs, job_digests)
+    instance_groups_to_examine = Hash.new { |h, k| h[k] = {} }
+    job_configs.values.each do |job_config|
+      base_config = JSON.parse(File.read(job_config['base']))
+      base_config['consumed_by'].each_pair do |provider_name, consumer_jobs|
+        consumer_jobs.each do |consumer_job|
+          digest_key = "skiff-imported-properties-#{instance_group}-#{provider_name}"
+          instance_groups_to_examine[consumer_job['role']][digest_key] = job_digests[provider_name]
+        end
+      end
+    end
+    instance_groups_to_examine
   end
 
   def kube_namespace

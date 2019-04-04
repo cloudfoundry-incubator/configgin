@@ -135,4 +135,36 @@ describe Configgin do
       )
     end
   end
+
+  describe '#expected_annotations' do
+    let(:job_configs) { JSON.parse(File.read(fixture('nats-job-config.json'))) }
+    let(:job_digests) { { 'loggregator_agent' => '123' } }
+    it 'should return the correct expected annotations' do
+      result = subject.expected_annotations(job_configs, job_digests)
+      expect(result).to eq(
+        'debugger' => {
+          'skiff-imported-properties-instance-group-loggregator_agent' => '123'
+        }
+      )
+    end
+  end
+
+  describe '#restart_affected_pods' do
+    let(:expected_annotations) {
+      {
+        'debugger' => {
+          'key' => 'value'
+        }
+      }
+    }
+    it 'should patch the statefulset' do
+      stateful_set = client.get_stateful_set('debugger', 'the-namespace')
+      annotations = stateful_set.spec&.template&.metadata&.annotations
+      expect(annotations).to be_nil
+      subject.restart_affected_pods expected_annotations
+      stateful_set = client.get_stateful_set('debugger', 'the-namespace')
+      annotations = stateful_set.spec.template.metadata.annotations.to_h
+      expect(JSON.parse(annotations.to_json)).to include(expected_annotations['debugger'])
+    end
+  end
 end
