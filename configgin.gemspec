@@ -1,6 +1,4 @@
-# coding: utf-8
-
-lib = File.expand_path('../lib', __FILE__)
+lib = File.expand_path('lib', __dir__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'configgin/version'
 
@@ -25,8 +23,8 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rake', '~> 10.0'
 
   spec.add_dependency 'bosh-template', '~> 2.0'
-  spec.add_dependency 'rainbow', '~>2.0', '!=2.2.1'
   spec.add_dependency 'deep_merge', '~> 1.1'
-  spec.add_dependency 'mustache', '~> 1.0'
   spec.add_dependency 'kubeclient', '~>2.0'
+  spec.add_dependency 'mustache', '~> 1.0'
+  spec.add_dependency 'rainbow', '~>2.0', '!=2.2.1'
 end
