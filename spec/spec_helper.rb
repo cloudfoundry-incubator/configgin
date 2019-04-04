@@ -9,6 +9,19 @@ class MockKubeClient
     items.first
   end
 
+  def _patch_single(type, name, patch, namespace = nil)
+    object = _get_single(type, name, namespace)
+    raise %(Could not find #{type} "#{namespace}/#{name}" to patch) unless object
+
+    patch_object = lambda do |child_obj, child_patch|
+      child_patch.each_pair do |k, v|
+        child_obj[k] = v.is_a?(Hash) ? patch_object.call(child_obj[k] || OpenStruct.new, v) : v
+      end
+      child_obj
+    end
+    patch_object.call object, patch
+  end
+
   def _get_multiple(type, filters = {})
     items = (@state[type] || []).dup
     items.select! { |i| i.metadata.namespace == filters[:namespace] } unless filters[:namespace].nil?
@@ -23,26 +36,38 @@ class MockKubeClient
     if name.to_s.start_with? 'get_'
       type = name.to_s.sub(/^get_/, '').sub(/s$/, '')
       return _get_multiple(type, *args) if name.to_s.end_with? 's'
+
       return _get_single(type, *args)
+    elsif name.to_s.start_with? 'patch_'
+      type = name.to_s.sub(/^patch_/, '').sub(/s$/, '')
+      raise "Don't know how to patch multiple #{type}s: #{name}" if name.to_s.end_with? 's'
+
+      return _patch_single(type, *args)
     end
     super
   end
 
   def respond_to_missing?(method_name, include_private = false)
-    return true if method_name.to_s.start_with? 'get_'
+    return true if /^(?:get|patch)_/ =~ method_name.to_s
+
     super
   end
 
-  # _convert_ostruct takes an object and recursively converts any
-  # encountered hashes to an ostruct
-  def _convert_ostruct(obj)
-    return OpenStruct.new(Hash[obj.map { |k, v| [k, _convert_ostruct(v)] }]).freeze if obj.is_a?(Hash)
-    return obj.map { |v| _convert_ostruct(v) }.freeze if obj.is_a?(Array)
-    obj
-  end
-
   def initialize(file_name)
-    @state = _convert_ostruct(YAML.load_file(file_name))
+    @state = convert_to_openstruct(YAML.load_file(file_name))
+  end
+end
+
+# convert_to_openstruct takes an object and recursively converts any
+# encountered hashes to an OpenStruct
+def convert_to_openstruct(obj)
+  case obj
+  when Hash, OpenStruct
+    OpenStruct.new(Hash[obj.map { |k, v| [k, convert_to_openstruct(v)] }])
+  when Array
+    obj.map { |v| convert_to_openstruct(v) }
+  else
+    obj
   end
 end
 

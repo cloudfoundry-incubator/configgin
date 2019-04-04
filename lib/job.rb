@@ -4,10 +4,11 @@ require_relative 'kube_link_generator'
 
 # Job describes a single BOSH job
 class Job
-  def initialize(spec, namespace, client, client_stateful_set)
+  def initialize(spec:, namespace:, client:, client_stateful_set:, self_name: ENV['HOSTNAME'])
     @spec = spec
     @namespace = namespace
     @client = client
+    @self_name = self_name
     links = @spec['links'] = KubeLinkSpecs.new(@spec, @namespace, @client, client_stateful_set)
 
     # Figure out whether _this_ should bootstrap
@@ -19,25 +20,24 @@ class Job
   attr_reader :spec
 
   def exported_properties
-    return @exported_propertes if @exported_properties
-    exported_properties = {}
-    spec['exported_properties'].each do |prop|
-      src = spec['properties']
-      dst = exported_properties
-      keys = prop.split('.')
-      leaf = keys.pop
-      keys.each do |key|
-        dst[key] ||= {}
-        dst = dst[key]
-        src = src.fetch(key, {})
+    @exported_properties ||= {}.tap do |exported_properties|
+      spec['exported_properties'].each do |prop|
+        src = spec['properties']
+        dst = exported_properties
+        keys = prop.split('.')
+        leaf = keys.pop
+        keys.each do |key|
+          dst[key] ||= {}
+          dst = dst[key]
+          src = src.fetch(key, {})
+        end
+        dst[leaf] = src[leaf]
       end
-      dst[leaf] = src[leaf]
     end
-    @exported_properties = exported_properties
   end
 
   def self_pod
-    @self_pod ||= @client.get_pod(ENV['HOSTNAME'], @namespace)
+    @self_pod ||= @client.get_pod(@self_name, @namespace)
   end
 
   def self_role
@@ -82,7 +82,7 @@ class Job
       out_file = nil
       raise "failed to open output file #{output_file_path}: #{e}"
     ensure
-      out_file.close unless out_file.nil?
+      out_file&.close
     end
   end
 end

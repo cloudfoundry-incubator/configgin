@@ -13,6 +13,7 @@ module Cli
         raise ArgMissingError, key.to_s
       end
     end
+    options[:bosh_deployment_manifest] ||= nil
   end
 
   # Make an option parser bound to the hash passed in.

@@ -3,7 +3,7 @@
 pod:
 - metadata:
     name: pod-0
-    namespace: namespace
+    namespace: the-namespace
     annotations:
       skiff-exported-properties-unused: '{}'
     labels:
@@ -17,7 +17,7 @@ pod:
     subdomain: provider-role
 - metadata:
     name: other-234z234
-    namespace: namespace
+    namespace: the-namespace
     annotations:
       skiff-exported-properties-provider-job: '{"hello":{"world":"ohai"}}'
     labels:
@@ -31,6 +31,11 @@ pod:
 service:
 - metadata:
     name: provider-role
-    namespace: namespace
+    namespace: the-namespace
   spec:
     clusterIP: '192.168.2.221'
+
+stateful_set:
+- metadata:
+    name: debugger
+    namespace: the-namespace

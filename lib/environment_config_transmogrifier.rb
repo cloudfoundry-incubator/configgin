@@ -17,6 +17,7 @@ class EnvironmentConfigTransmogrifier < BaseTransmogrifier
     def escapeHTML(str)
       str
     end
+    # rubocop:enable MethodName
   end
 
   # Processes the mustache templates and injects new keys into the configuration
@@ -27,7 +28,7 @@ class EnvironmentConfigTransmogrifier < BaseTransmogrifier
     input_hash = ENV.to_hash
 
     # load secrets
-    extendReplace(input_hash, secrets) if secrets && File.directory?(secrets)
+    extend_replace(input_hash, secrets) if secrets && File.directory?(secrets)
 
     # remove empty values
     input_hash.reject! { |_, v| v.nil? || v.empty? }
@@ -41,7 +42,7 @@ class EnvironmentConfigTransmogrifier < BaseTransmogrifier
       # by default, all values are strings, because they come from the environment
       # we need to unmarshall them using YAML.load
       loop do
-        value = processMustacheTemplate(value, input_hash, key)
+        value = process_mustache_template(value, input_hash, key)
         break unless value.respond_to?(:include?) && value.include?('((')
       end
 
@@ -52,7 +53,7 @@ class EnvironmentConfigTransmogrifier < BaseTransmogrifier
     base_config
   end
 
-  def self.processMustacheTemplate(value, input_hash, key)
+  def self.process_mustache_template(value, input_hash, key)
     val = @@memoize_mustache.fetch(value, {})[input_hash]
     return val if val
 
@@ -63,14 +64,14 @@ class EnvironmentConfigTransmogrifier < BaseTransmogrifier
       mustache_value = mustache_value.to_s.gsub("\n", "\n\n")
       @@memoize_mustache[value] ||= {}
       @@memoize_mustache[value][input_hash] = YAML.safe_load(mustache_value)
-    rescue => e
-      msg = mustacheMessageFromError(e)
+    rescue StandardError => e
+      msg = mustache_message_from_error(e)
       raise LoadYamlFromMustacheError, "Could not load config key '#{key}': #{msg}"
     end
   end
 
-  def self.mustacheMessageFromError(e)
-    lines = e.message.split(/\n/)
+  def self.mustache_message_from_error(error)
+    lines = error.message.split(/\n/)
     return 'No reason for failure given by mustache library' if lines.empty?
     return lines.first if lines.size < 4
 
@@ -84,7 +85,7 @@ class EnvironmentConfigTransmogrifier < BaseTransmogrifier
     lines[0] + ": Error at or near position #{caret_pos - leading_junk} of template value."
   end
 
-  def self.extendReplace(hash, path)
+  def self.extend_replace(hash, path)
     # This code assumes that 'path' points to a directory of files.
     # The name of each file is the key into the hash, and the contents
     # of the file are the value to enter, as-is. The order of the

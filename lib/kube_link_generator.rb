@@ -1,3 +1,4 @@
+require 'digest/sha1'
 require 'kubeclient'
 require 'uri'
 require_relative 'exceptions'
@@ -28,6 +29,7 @@ class KubeLinkSpecs
   def pod_index(name)
     index = name.rpartition('-').last
     return index.to_i if /^\d+$/ =~ index
+
     # The pod name is something like role-abcxyz
     # Derive the index from the randomness that went into the suffix.
     # chars are the characters kubernetes might use to generate names
@@ -49,6 +51,7 @@ class KubeLinkSpecs
           good_pods = pods.select do |pod|
             next false unless pod.status.podIP
             next true if pod.metadata.annotations["skiff-exported-properties-#{job}"]
+
             # Fall back to non-job-specific properties, for upgrades from older versions
             pod.metadata.annotations['skiff-exported-properties']
           end
@@ -66,17 +69,27 @@ class KubeLinkSpecs
     end
   end
 
-  def get_exported_properties(pod, job)
-    if pod.metadata.annotations["skiff-exported-properties-#{job}"]
-      JSON.parse(pod.metadata.annotations["skiff-exported-properties-#{job}"])
-    elsif pod.metadata.annotations["skiff-exported-properties"]
-      JSON.parse(pod.metadata.annotations["skiff-exported-properties"])[job]
+  def get_exported_properties(role_name, pod, job_name)
+    if pod.metadata.annotations["skiff-exported-properties-#{job_name}"]
+      if pod.metadata.annotations["skiff-exported-digest-#{job_name}"]
+        # Copy the digest over, so that if the source role changes we can be
+        # restarted.
+        digest = pod.metadata.annotations["skiff-exported-digest-#{job_name}"]
+        client.patch_pod(
+          ENV['HOSTNAME'],
+          { metadata: { annotations: { :"skiff-imported-properties-#{role_name}-#{job_name}" => digest } } },
+          namespace
+        )
+      end
+      JSON.parse(pod.metadata.annotations["skiff-exported-properties-#{job_name}"])
+    elsif pod.metadata.annotations['skiff-exported-properties']
+      JSON.parse(pod.metadata.annotations['skiff-exported-properties'])[job_name]
     else
       {}
     end
   end
 
-  def get_pod_instance_info(pod, job, pods_per_image)
+  def get_pod_instance_info(role_name, pod, job, pods_per_image)
     index = pod_index(pod.metadata.name)
     # Use pod DNS name for address field, instead of IP address which may change
     {
@@ -85,7 +98,7 @@ class KubeLinkSpecs
       'id' => pod.metadata.name,
       'az' => pod.metadata.annotations['failure-domain.beta.kubernetes.io/zone'] || 'az0',
       'address' => "#{pod.metadata.name}.#{pod.spec.subdomain}.#{ENV['KUBERNETES_NAMESPACE']}.svc.#{ENV['KUBERNETES_CLUSTER_DOMAIN']}",
-      'properties' => get_exported_properties(pod, job),
+      'properties' => get_exported_properties(role_name, pod, job),
       'bootstrap' => pods_per_image[pod.metadata.uid] < 2
     }
   end
@@ -97,6 +110,7 @@ class KubeLinkSpecs
     keys = {}
     pods.each do |pod|
       next if pod.status.containerStatuses.nil?
+
       key = pod.status.containerStatuses.map(&:imageID).sort.join("\n")
       sets[key] += 1
       keys[pod.metadata.uid] = key
@@ -116,7 +130,7 @@ class KubeLinkSpecs
       'id' => svc.metadata.name,
       'az' => pod.metadata.annotations['failure-domain.beta.kubernetes.io/zone'] || 'az0',
       'address' => svc.spec.clusterIP,
-      'properties' => get_exported_properties(pod, job),
+      'properties' => get_exported_properties(role_name, pod, job),
       'bootstrap' => true
     }
   end
@@ -132,7 +146,7 @@ class KubeLinkSpecs
         'id' => ss.metadata.name,
         'az' => pod.metadata.annotations['failure-domain.beta.kubernetes.io/zone'] || 'az0',
         'address' => "#{ss.metadata.name}-#{i}.#{ss.spec.serviceName}",
-        'properties' => get_exported_properties(pod, job),
+        'properties' => get_exported_properties(role_name, pod, job),
         'bootstrap' => i.zero?
       }
     end
@@ -151,27 +165,27 @@ class KubeLinkSpecs
     # Resolve the role we're looking for
     provider = spec['consumes'][key]
     unless provider
-      $stderr.puts "No link provider found for #{key}"
+      warn "No link provider found for #{key}"
       return @links[key] = nil
     end
 
     if provider['role'] == this_name
-      $stderr.puts "Resolving link #{key} via self provider #{provider}"
+      warn "Resolving link #{key} via self provider #{provider}"
       pods = get_pods_for_role(provider['role'], provider['job'], wait_for_all: true)
       pods_per_image = get_pods_per_image(pods)
-      instances = pods.map { |p| get_pod_instance_info(p, provider['job'], pods_per_image) }
+      instances = pods.map { |p| get_pod_instance_info(provider['role'], p, provider['job'], pods_per_image) }
     elsif service? provider['role']
       # Getting pods for a different service; since we have kube services, we don't handle it in configgin
-      $stderr.puts "Resolving link #{key} via service #{provider}"
+      warn "Resolving link #{key} via service #{provider}"
       instances = [get_svc_instance_info(provider['role'], provider['job'])]
     else
       # If there's no service associated, check the statefulset instead
-      $stderr.puts "Resolving link #{key} via statefulset #{provider}"
+      warn "Resolving link #{key} via statefulset #{provider}"
       instances = get_statefulset_instance_info(provider['role'], provider['job'])
     end
 
     # Underscores aren't valid hostnames, so jobs are transformed in fissile to use dashes
-    job_name = provider['job'].gsub('_', '-')
+    job_name = provider['job'].tr('_', '-')
     service_name = provider['service_name'] || "#{provider['role']}-#{job_name}"
 
     @links[key] = {
