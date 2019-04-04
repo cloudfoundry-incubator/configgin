@@ -85,4 +85,54 @@ describe Configgin do
       expect(statefulset.spec.template.metadata.annotations[imported_key]).to eq pod.metadata.annotations[exported_key]
     end
   end
+
+  describe '#patch_job_metadata' do
+    let(:jobs) {
+      {
+        first: OpenStruct.new(
+          exported_properties: {
+            foo: 1,
+            bar: 2
+          }
+        ),
+        second: OpenStruct.new(
+          exported_properties: {
+            hash: {
+              nested: {
+                value: 3
+              }
+            },
+            array: [
+              {
+                hash_value: 4
+              }
+            ]
+          }
+        )
+      }
+    }
+
+    it 'patches the jobs' do
+      subject.patch_job_metadata(jobs)
+      pod = client.get_pod('pod-0', 'the-namespace')
+      expect(pod).not_to be_nil
+      annotations = pod.metadata.annotations
+      expect(annotations).not_to be_nil
+      jobs.each do |name, job|
+        property_name = "skiff-exported-properties-#{name}"
+        expect(annotations[property_name]).to eq job.exported_properties.to_json
+        digest_name = "skiff-exported-digest-#{name}"
+        expect(annotations[digest_name]).to eq property_digest(job.exported_properties)
+      end
+    end
+
+    it 'returns the digests' do
+      results = subject.patch_job_metadata(jobs)
+      expect(results).to be_a Hash
+      expect(results).to include(
+        first: property_digest(jobs[:first].exported_properties),
+        second: property_digest(jobs[:second].exported_properties)
+      )
+    end
+  end
 end

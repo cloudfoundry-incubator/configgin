@@ -48,26 +48,26 @@ class MockKubeClient
   end
 
   def respond_to_missing?(method_name, include_private = false)
-    return true if method_name.to_s.start_with? 'get_'
+    return true if /^(?:get|patch)_/ =~ method_name.to_s
 
     super
   end
 
-  # _convert_ostruct takes an object and recursively converts any
-  # encountered hashes to an ostruct
-  def _convert_ostruct(obj)
-    case obj
-    when Hash, OpenStruct
-      OpenStruct.new(Hash[obj.map { |k, v| [k, _convert_ostruct(v)] }])
-    when Array
-      obj.map { |v| _convert_ostruct(v) }
-    else
-      obj
-    end
-  end
-
   def initialize(file_name)
-    @state = _convert_ostruct(YAML.load_file(file_name))
+    @state = convert_to_openstruct(YAML.load_file(file_name))
+  end
+end
+
+# convert_to_openstruct takes an object and recursively converts any
+# encountered hashes to an OpenStruct
+def convert_to_openstruct(obj)
+  case obj
+  when Hash, OpenStruct
+    OpenStruct.new(Hash[obj.map { |k, v| [k, convert_to_openstruct(v)] }])
+  when Array
+    obj.map { |v| convert_to_openstruct(v) }
+  else
+    obj
   end
 end
 
