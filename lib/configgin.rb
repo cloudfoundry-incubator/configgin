@@ -128,7 +128,7 @@ class Configgin
     instance_groups_to_examine = Hash.new { |h, k| h[k] = {} }
     job_configs.values.each do |job_config|
       base_config = JSON.parse(File.read(job_config['base']))
-      base_config['consumed_by'].each_pair do |provider_name, consumer_jobs|
+      base_config.fetch('consumed_by', {}).each_pair do |provider_name, consumer_jobs|
         consumer_jobs.each do |consumer_job|
           digest_key = "skiff-imported-properties-#{instance_group}-#{provider_name}"
           instance_groups_to_examine[consumer_job['role']][digest_key] = job_digests[provider_name]
