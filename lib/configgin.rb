@@ -57,19 +57,21 @@ class Configgin
     jobs
   end
 
-  # Set the exported properties and their digests, and return the digests
+  # Set the exported properties and their digests, and return the digests.
   def patch_job_metadata(jobs)
     digests = {}
     jobs.each do |name, job|
       digest = property_digest(job.exported_properties)
       kube_client.patch_pod(
         @self_name,
-        { metadata: {
-          annotations: {
-            :"skiff-exported-properties-#{name}" => job.exported_properties.to_json,
-            :"skiff-exported-digest-#{name}" => digest
+        {
+          metadata: {
+            annotations: {
+              :"skiff-exported-properties-#{name}" => job.exported_properties.to_json,
+              :"skiff-exported-digest-#{name}" => digest
+            }
           }
-        } },
+        },
         kube_namespace
       )
       digests[name] = digest
@@ -87,7 +89,7 @@ class Configgin
     end
   end
 
-  # Some pods might have depended onthe properties exported by this pod; locate
+  # Some pods might have depended on the properties exported by this pod; locate
   # them and cause them to restart as appropriate.
   def restart_affected_pods(job_configs, job_digests)
     raise 'No digest' unless job_digests
@@ -121,7 +123,8 @@ class Configgin
           end
           # rubocop:enable Layout/RescueEnsureAlignment
           if response['reason'] == 'NotFound'
-            # The StatefulSet can be missing if we're configured to not have an optional instance group
+            # The StatefulSet can be missing if we're configured to not have an
+            # optional instance group.
             warn "Skipping patch of non-existant StatefulSet #{instance_group_name}"
             next
           end

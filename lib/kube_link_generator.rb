@@ -72,7 +72,8 @@ class KubeLinkSpecs
   def get_exported_properties(role_name, pod, job_name)
     if pod.metadata.annotations["skiff-exported-properties-#{job_name}"]
       if pod.metadata.annotations["skiff-exported-digest-#{job_name}"]
-        # Copy the digest over, so that if the source role changes we can be restarted
+        # Copy the digest over, so that if the source role changes we can be
+        # restarted.
         digest = pod.metadata.annotations["skiff-exported-digest-#{job_name}"]
         client.patch_pod(
           ENV['HOSTNAME'],
