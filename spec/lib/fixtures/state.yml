@@ -15,6 +15,9 @@ pod:
     - imageID: docker://image-two
   spec:
     subdomain: provider-role
+    containers:
+    - image: docker.io/image-one
+    - image: docker.io/image-two
 - metadata:
     name: other-234z234
     namespace: the-namespace
@@ -22,6 +25,10 @@ pod:
       skiff-exported-properties-provider-job: '{"hello":{"world":"ohai"}}'
     labels:
       app.kubernetes.io/component: provider-role
+  spec:
+    containers:
+    - image: docker.io/image-one
+    - image: docker.io/image-two
   status:
     podIP: '192.168.2.39'
     containerStatuses:
@@ -39,3 +46,25 @@ stateful_set:
 - metadata:
     name: debugger
     namespace: the-namespace
+- metadata:
+    name: fake
+    namespace: the-namespace
+    labels:
+      app.kubernetes.io/component: fake
+  spec:
+    template:
+      spec:
+        containers:
+        - image: docker.io/image-one
+        - image: docker.io/image-two
+- metadata:
+    name: provider-role
+    namespace: the-namespace
+    labels:
+      app.kubernetes.io/component: provider-role
+  spec:
+    template:
+      spec:
+        containers:
+        - image: docker.io/image-one
+        - image: docker.io/image-two

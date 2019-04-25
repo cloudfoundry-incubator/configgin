@@ -11,6 +11,10 @@ pod:
       app.kubernetes.io/component: dummy
     annotations:
       skiff-exported-properties: '{"dummy": {"prop": "a"}}'
+  spec:
+    containers:
+    - image: docker.io/image-one
+    - image: docker.io/image-two
   status:
     podIP: 192.0.2.1
     containerStatuses:
@@ -23,6 +27,10 @@ pod:
       app.kubernetes.io/component: dummy
     annotations:
       skiff-exported-properties-dummy: '{"prop": "b"}'
+  spec:
+    containers:
+    - image: docker.io/image-one
+    - image: docker.io/image-two
   status:
     podIP: 192.0.2.2
     containerStatuses:

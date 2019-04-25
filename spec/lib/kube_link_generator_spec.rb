@@ -167,7 +167,8 @@ describe KubeLinkSpecs do
       it 'should return the expected information' do
         role = 'dummy-role'
         job = 'dummy'
-        pods = specs._get_pods_for_role(job)
+        sts = "docker.io/image-one\ndocker.io/image-two"
+        pods = specs._get_pods_for_role(job, sts)
         pod = pods.find { |p| p.metadata.name.start_with? 'bootstrap-pod' }
         expect(pod).to_not be_nil
         pods_per_image = specs.get_pods_per_image(pods)
@@ -184,7 +185,8 @@ describe KubeLinkSpecs do
       it 'should not be bootstrap with multiple pods of the same images' do
         role = 'dummy-role'
         job = 'dummy'
-        pods = specs._get_pods_for_role(job)
+        sts = "docker.io/image-one\ndocker.io/image-two"
+        pods = specs._get_pods_for_role(job, sts)
         pod = pods.find { |p| p.metadata.name.start_with? 'ready-pod-0' }
         expect(pod).to_not be_nil
         pods_per_image = specs.get_pods_per_image(pods)
@@ -196,7 +198,8 @@ describe KubeLinkSpecs do
     context :get_pods_per_image do
       it 'should return the expected counts' do
         job = 'dummy'
-        pods = specs._get_pods_for_role(job)
+        sts = "docker.io/image-one\ndocker.io/image-two"
+        pods = specs._get_pods_for_role(job, sts)
         pods_per_image = specs.get_pods_per_image(pods)
         expect(pods_per_image).to eq(
           '893dd4a8-2067-44d3-aae7-1389f6a1789a' => 2,
