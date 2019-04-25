@@ -38,16 +38,30 @@ class KubeLinkSpecs
     index.chars.map { |c| chars.index(c) }.reduce(0) { |v, c| v * chars.length + c }
   end
 
-  def _get_pods_for_role(role_name)
-    client.get_pods(namespace: namespace, label_selector: "app.kubernetes.io/component=#{role_name}")
+  def _get_sts_image_for_role(role_name)
+    @client_stateful_set.get_stateful_set(role_name, namespace)
+      .spec.template.spec.containers.map(&:image).sort.join("\n")
+  end
+
+  def _get_pods_for_role(role_name, sts_image)
+    client
+      .get_pods(namespace: namespace, label_selector: "app.kubernetes.io/component=#{role_name}")
+      .select do |pod|
+      pod_image = pod.spec.containers.map(&:image).sort.join("\n")
+      next true if pod_image == sts_image
+
+      false
+    end
   end
 
   def get_pods_for_role(role_name, job, options = {})
+    sts_image = _get_sts_image_for_role(role_name)
+
     loop do
       # The 30.times loop exists to print out status messages
       30.times do
         1.times do
-          pods = _get_pods_for_role(role_name)
+          pods = _get_pods_for_role(role_name, sts_image)
           good_pods = pods.select do |pod|
             next false unless pod.status.podIP
             next true if pod.metadata.annotations["skiff-exported-properties-#{job}"]
