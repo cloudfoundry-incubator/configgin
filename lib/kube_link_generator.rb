@@ -38,20 +38,19 @@ class KubeLinkSpecs
     index.chars.map { |c| chars.index(c) }.reduce(0) { |v, c| v * chars.length + c }
   end
 
+  def _get_image_for_pod_spec(pod_spec)
+    pod_spec.containers.map(&:image).sort.join("\n")
+  end
+
   def _get_sts_image_for_role(role_name)
-    @client_stateful_set.get_stateful_set(role_name, namespace)
-      .spec.template.spec.containers.map(&:image).sort.join("\n")
+    statefulset = @client_stateful_set.get_stateful_set(role_name, namespace)
+    _get_image_for_pod_spec statefulset.spec.template.spec
   end
 
   def _get_pods_for_role(role_name, sts_image)
     client
       .get_pods(namespace: namespace, label_selector: "app.kubernetes.io/component=#{role_name}")
-      .select do |pod|
-      pod_image = pod.spec.containers.map(&:image).sort.join("\n")
-      next true if pod_image == sts_image
-
-      false
-    end
+      .select { |pod| _get_image_for_pod_spec(pod.spec) == sts_image }
   end
 
   def get_pods_for_role(role_name, job, options = {})
