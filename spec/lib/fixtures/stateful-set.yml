@@ -9,3 +9,8 @@ stateful_set:
     spec:
       replicas: 3
       serviceName: dummy-set
+      template:
+        spec:
+          containers:
+          - image: docker.io/image-one
+          - image: docker.io/image-two
