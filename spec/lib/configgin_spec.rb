@@ -81,7 +81,7 @@ describe Configgin do
       expect(statefulset).not_to be_nil
 
       exported_key = 'skiff-exported-digest-loggregator_agent'
-      imported_key = 'skiff-imported-properties-instance-group-loggregator_agent'
+      imported_key = 'skiff-in-props-instance-group-loggregator_agent'
       expect(statefulset.spec.template.metadata.annotations[imported_key]).to eq pod.metadata.annotations[exported_key]
     end
   end
@@ -143,7 +143,7 @@ describe Configgin do
       result = subject.expected_annotations(job_configs, job_digests)
       expect(result).to eq(
         'debugger' => {
-          'skiff-imported-properties-instance-group-loggregator_agent' => '123'
+          'skiff-in-props-instance-group-loggregator_agent' => '123'
         }
       )
     end

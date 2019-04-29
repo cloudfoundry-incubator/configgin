@@ -90,7 +90,7 @@ class KubeLinkSpecs
         digest = pod.metadata.annotations["skiff-exported-digest-#{job_name}"]
         client.patch_pod(
           ENV['HOSTNAME'],
-          { metadata: { annotations: { :"skiff-imported-properties-#{role_name}-#{job_name}" => digest } } },
+          { metadata: { annotations: { :"skiff-in-props-#{role_name}-#{job_name}" => digest } } },
           namespace
         )
       end

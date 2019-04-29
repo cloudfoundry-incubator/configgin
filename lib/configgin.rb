@@ -130,7 +130,7 @@ class Configgin
       base_config = JSON.parse(File.read(job_config['base']))
       base_config.fetch('consumed_by', {}).each_pair do |provider_name, consumer_jobs|
         consumer_jobs.each do |consumer_job|
-          digest_key = "skiff-imported-properties-#{instance_group}-#{provider_name}"
+          digest_key = "skiff-in-props-#{instance_group}-#{provider_name}"
           instance_groups_to_examine[consumer_job['role']][digest_key] = job_digests[provider_name]
         end
       end

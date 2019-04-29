@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    configgin (0.18.5)
+    configgin (0.18.6)
       bosh-template (~> 2.0)
       deep_merge (~> 1.1)
       kubeclient (~> 2.0)
@@ -113,7 +113,7 @@ GEM
     thor (0.20.0)
     unf (0.1.4)
       unf_ext
-    unf_ext (0.0.7.5)
+    unf_ext (0.0.7.6)
     unicode-display_width (1.4.0)
 
 PLATFORMS
