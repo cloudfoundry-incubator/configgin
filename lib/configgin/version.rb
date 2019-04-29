@@ -1,3 +1,3 @@
 class Configgin
-  VERSION = '0.18.6'.freeze
+  VERSION = '0.18.7'.freeze
 end
