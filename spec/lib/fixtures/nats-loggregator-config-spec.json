@@ -44,7 +44,7 @@
       }
   },
   "consumed_by": {
-      "loggregator_agent": [
+      "renamed_provider": [
           {
             "role": "debugger",
             "job": "troubleshooter",
