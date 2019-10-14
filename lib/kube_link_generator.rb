@@ -1,3 +1,4 @@
+require 'base64'
 require 'digest/sha1'
 require 'kubeclient'
 require 'uri'
@@ -63,10 +64,16 @@ class KubeLinkSpecs
           pods = _get_pods_for_role(role_name, sts_image)
           good_pods = pods.select do |pod|
             next false unless pod.status.podIP
-            next true if pod.metadata.annotations["skiff-exported-properties-#{job}"]
+            begin
+              secret = client.get_secret("#{pod.metadata.name}-#{pod.metadata.uid}", namespace)
+              next true if secret.data["skiff-exported-properties-#{job}"]
 
-            # Fall back to non-job-specific properties, for upgrades from older versions
-            pod.metadata.annotations['skiff-exported-properties']
+            rescue
+              next true if pod.metadata.annotations["skiff-exported-properties-#{job}"]
+
+              # Fall back to non-job-specific properties, for upgrades from older versions
+              pod.metadata.annotations['skiff-exported-properties']
+            end
           end
 
           if options[:wait_for_all]
@@ -82,21 +89,44 @@ class KubeLinkSpecs
     end
   end
 
+  def patch_pod_with_imported_properties(role_name, job_name, digest)
+    client.patch_pod(
+      ENV['HOSTNAME'],
+      { metadata: { annotations: { :"skiff-in-props-#{role_name}-#{job_name}" => digest } } },
+      namespace
+    )
+  end
+
   def get_exported_properties(role_name, pod, job_name)
-    if pod.metadata.annotations["skiff-exported-properties-#{job_name}"]
+    # Exported properties are stored in a secret linked to the pod by naming convention.
+    begin
+      secret = client.get_secret("#{pod.metadata.name}-#{pod.metadata.uid}", namespace)
+    rescue
+    end
+
+    if !secret.nil?
+      digest = secret.data["skiff-exported-digest-#{job_name}"]
+      # digest not being set only happens during the spec tests???
+      if digest
+        # Copy the digest over, so that if the source role changes we can be restarted.
+        patch_pod_with_imported_properties(role_name, job_name, Base64.decode64(digest))
+      end
+      JSON.parse(Base64.decode64(secret.data["skiff-exported-properties-#{job_name}"]))
+
+    # Older implementation stored exported properties in annotations (one per job).
+    elsif pod.metadata.annotations["skiff-exported-properties-#{job_name}"]
+      # digest not being set only happens during the spec tests???
       if pod.metadata.annotations["skiff-exported-digest-#{job_name}"]
-        # Copy the digest over, so that if the source role changes we can be
-        # restarted.
+        # Copy the digest over, so that if the source role changes we can be restarted.
         digest = pod.metadata.annotations["skiff-exported-digest-#{job_name}"]
-        client.patch_pod(
-          ENV['HOSTNAME'],
-          { metadata: { annotations: { :"skiff-in-props-#{role_name}-#{job_name}" => digest } } },
-          namespace
-        )
+        patch_pod_with_imported_properties(role_name, job_name, digest)
       end
       JSON.parse(pod.metadata.annotations["skiff-exported-properties-#{job_name}"])
+
+    # Oldest implementation stored exported properties in a single annotation (hash of all jobs).
     elsif pod.metadata.annotations['skiff-exported-properties']
       JSON.parse(pod.metadata.annotations['skiff-exported-properties'])[job_name]
+
     else
       {}
     end

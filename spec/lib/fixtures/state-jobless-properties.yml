@@ -5,7 +5,7 @@
 pod:
 - metadata:
     uid: 5919ad5d-f09d-4a20-8a26-1081a3c0003e
-    name: old-pod-0
+    name: oldest-pod-0
     namespace: namespace
     labels:
       app.kubernetes.io/component: dummy
@@ -21,7 +21,7 @@ pod:
     - imageID: docker://aaa
 - metadata:
     uid: 225f47c4-cc85-41d4-ade7-4348b233335a
-    name: new-pod-0
+    name: old-pod-0
     namespace: namespace
     labels:
       app.kubernetes.io/component: dummy
@@ -35,3 +35,29 @@ pod:
     podIP: 192.0.2.2
     containerStatuses:
     - imageID: docker://bbb
+- metadata:
+    uid: 4123b33d-8e32-4d9c-baa5-c24704e830c3
+    name: new-pod-0
+    namespace: namespace
+    labels:
+      app.kubernetes.io/component: dummy
+    annotations: {}
+  spec:
+    containers:
+    - image: docker.io/image-one
+    - image: docker.io/image-two
+  status:
+    podIP: 192.0.2.2
+    containerStatuses:
+    - imageID: docker://bbb
+
+secret:
+- metadata:
+    name: new-pod-0-4123b33d-8e32-4d9c-baa5-c24704e830c3
+    namespace: namespace
+  data:
+    # echo '{"prop": "c"}' | base64
+    skiff-exported-properties-dummy: "eyJwcm9wIjogImMifQo="
+    # NOT the correct digest!
+    # echo sha1:adc83b19e793491b1c6ea0fd8b46cd9f32e592fc | base64
+    # skiff-exported-digest-dummy: "c2hhMTphZGM4M2IxOWU3OTM0OTFiMWM2ZWEwZmQ4YjQ2Y2Q5ZjMyZTU5MmZjCg=="

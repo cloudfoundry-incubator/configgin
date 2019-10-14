@@ -1,3 +1,4 @@
+require 'base64'
 require 'json'
 
 require_relative 'cli'
@@ -59,23 +60,43 @@ class Configgin
 
   # Set the exported properties and their digests, and return the digests.
   def patch_job_metadata(jobs)
+    pod = kube_client.get_pod(@self_name, kube_namespace)
+
+    secret = Kubeclient::Resource.new
+    secret.metadata = {}
+    # Prefixing with pod.metadata.name is purely for human convenience/debugging.
+    secret.metadata.name = "#{pod.metadata.name}-#{pod.metadata.uid}"
+    secret.metadata.namespace = kube_namespace
+
+    # Make sure the secret gets removed when the pod is deleted.
+    secret.metadata.ownerReferences = [
+      {
+        :apiVersion => pod.apiVersion,
+        :blockOwnerDeletion => false,
+        :controller => false,
+        :kind => pod.kind,
+        :name => pod.metadata.name,
+        :uid => pod.metadata.uid,
+      }
+    ]
+
+    secret.data = {}
     digests = {}
     jobs.each do |name, job|
-      digest = property_digest(job.exported_properties)
-      kube_client.patch_pod(
-        @self_name,
-        {
-          metadata: {
-            annotations: {
-              :"skiff-exported-properties-#{name}" => job.exported_properties.to_json,
-              :"skiff-exported-digest-#{name}" => digest
-            }
-          }
-        },
-        kube_namespace
-      )
-      digests[name] = digest
+      digests[name] = property_digest(job.exported_properties)
+      secret.data["skiff-exported-properties-#{name}"] = Base64.encode64(job.exported_properties.to_json)
+      secret.data["skiff-exported-digest-#{name}"] = Base64.encode64(digests[name])
     end
+
+    # Only the main container gets to export properties; colocated sidecars don't.
+    if instance_group == ENV["KUBERNETES_CONTAINER_NAME"]
+      begin
+        kube_client.delete_secret(secret.metadata.name, kube_namespace)
+      rescue
+      end
+      kube_client.create_secret(secret)
+    end
+
     digests
   end
 
