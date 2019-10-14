@@ -11,7 +11,13 @@
 
 set -o errexit -o nounset
 
-REPO="${REPO:-../../github.com/SUSE/scf}"
+if [ "${USER}" != "jan" ]; then
+    REPO="${REPO:-../../github.com/SUSE/scf}"
+    HELM=helm
+else
+    REPO="${REPO:-../scf}"
+    HELM=helm-2.11
+fi
 
 REPO="$( cd "${REPO}" && echo "${PWD}" )"
 IMAGE="$( cd "${REPO}" && source .envrc && echo "${FISSILE_STEMCELL}" )"
@@ -42,9 +48,9 @@ vagrant_ready=""
 if test -z "${NO_RUN:-}" ; then
     if ( cd "${REPO}" && (vagrant status 2>/dev/null | grep --quiet running) ) ; then
         vagrant_ready="true"
-        releases=$(helm list --short)
+        releases=$(${HELM} list --short)
         if test -n "${releases}" ; then
-            helm delete --purge ${releases}
+            ${HELM} delete --purge ${releases}
         fi
         kubectl delete ns cf ||:
         kubectl delete ns uaa ||:
@@ -100,7 +106,7 @@ vagrant ssh -- -tt <<EOF
         sleep 1
     done
     docker images --format={{.Repository}}:{{.Tag}} | \
-        grep -E '/scf-|role-packages' | \
+        grep -E '/scf-|uaa-|role-packages' | \
         xargs --no-run-if-empty docker rmi -f
     docker images | \
         awk '/<none>/ { print \$3 }' | \
