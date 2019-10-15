@@ -10,13 +10,9 @@
 # - docker daemon running on the host (requires volumes)
 
 set -o errexit -o nounset
-if [ "${USER}" == "jan" ]; then
-    HELM=helm-2.11
-else
-    HELM=helm
-fi
 
-REPO="${REPO:-../scf}"
+: "${HELM:=helm}"
+: "${REPO:=../scf}"
 
 REPO="$( cd "${REPO}" && echo "${PWD}" )"
 IMAGE="$( cd "${REPO}" && source .envrc && echo "${FISSILE_STEMCELL}" )"
