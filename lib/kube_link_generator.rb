@@ -69,10 +69,7 @@ class KubeLinkSpecs
               next true if secret.data["skiff-exported-properties-#{job}"]
 
             rescue
-              next true if pod.metadata.annotations["skiff-exported-properties-#{job}"]
-
-              # Fall back to non-job-specific properties, for upgrades from older versions
-              pod.metadata.annotations['skiff-exported-properties']
+              pod.metadata.annotations["skiff-exported-properties-#{job}"]
             end
           end
 
@@ -122,10 +119,6 @@ class KubeLinkSpecs
         patch_pod_with_imported_properties(role_name, job_name, digest)
       end
       JSON.parse(pod.metadata.annotations["skiff-exported-properties-#{job_name}"])
-
-    # Oldest implementation stored exported properties in a single annotation (hash of all jobs).
-    elsif pod.metadata.annotations['skiff-exported-properties']
-      JSON.parse(pod.metadata.annotations['skiff-exported-properties'])[job_name]
 
     else
       {}

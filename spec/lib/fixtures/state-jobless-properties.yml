@@ -4,22 +4,6 @@
 ---
 pod:
 - metadata:
-    uid: 5919ad5d-f09d-4a20-8a26-1081a3c0003e
-    name: oldest-pod-0
-    namespace: namespace
-    labels:
-      app.kubernetes.io/component: dummy
-    annotations:
-      skiff-exported-properties: '{"dummy": {"prop": "a"}}'
-  spec:
-    containers:
-    - image: docker.io/image-one
-    - image: docker.io/image-two
-  status:
-    podIP: 192.0.2.1
-    containerStatuses:
-    - imageID: docker://aaa
-- metadata:
     uid: 225f47c4-cc85-41d4-ade7-4348b233335a
     name: old-pod-0
     namespace: namespace

@@ -10,14 +10,13 @@
 # - docker daemon running on the host (requires volumes)
 
 set -o errexit -o nounset
-
-if [ "${USER}" != "jan" ]; then
-    REPO="${REPO:-../../github.com/SUSE/scf}"
-    HELM=helm
-else
-    REPO="${REPO:-../scf}"
+if [ "${USER}" == "jan" ]; then
     HELM=helm-2.11
+else
+    HELM=helm
 fi
+
+REPO="${REPO:-../scf}"
 
 REPO="$( cd "${REPO}" && echo "${PWD}" )"
 IMAGE="$( cd "${REPO}" && source .envrc && echo "${FISSILE_STEMCELL}" )"
@@ -48,9 +47,9 @@ vagrant_ready=""
 if test -z "${NO_RUN:-}" ; then
     if ( cd "${REPO}" && (vagrant status 2>/dev/null | grep --quiet running) ) ; then
         vagrant_ready="true"
-        releases=$(${HELM} list --short)
+        releases=$("${HELM}" list --short)
         if test -n "${releases}" ; then
-            ${HELM} delete --purge ${releases}
+            "${HELM}" delete --purge ${releases}
         fi
         kubectl delete ns cf ||:
         kubectl delete ns uaa ||:

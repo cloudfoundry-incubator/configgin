@@ -38,13 +38,11 @@ describe KubeLinkSpecs do
         client = MockKubeClient.new(fixture('state-jobless-properties.yml'))
         allow(specs).to receive(:client) { client }
         pods = specs.get_pods_for_role('dummy', 'dummy')
-        expect(pods.length).to be 3
-        expect(pods[0].metadata.name).to eq('oldest-pod-0')
-        expect(specs.get_exported_properties('dummy-role', pods[0], 'dummy')).to include('prop' => 'a')
-        expect(pods[1].metadata.name).to eq('old-pod-0')
-        expect(specs.get_exported_properties('dummy-role', pods[1], 'dummy')).to include('prop' => 'b')
-        expect(pods[2].metadata.name).to eq('new-pod-0')
-        expect(specs.get_exported_properties('dummy-role', pods[2], 'dummy')).to include('prop' => 'c')
+        expect(pods.length).to be 2
+        expect(pods[0].metadata.name).to eq('old-pod-0')
+        expect(specs.get_exported_properties('dummy-role', pods[0], 'dummy')).to include('prop' => 'b')
+        expect(pods[1].metadata.name).to eq('new-pod-0')
+        expect(specs.get_exported_properties('dummy-role', pods[1], 'dummy')).to include('prop' => 'c')
       end
 
       # Build a client with the given answers (sequentially)
@@ -83,10 +81,9 @@ describe KubeLinkSpecs do
         pods = specs.get_pods_for_role('dummy', 'dummy')
         expect(pods).not_to be_empty
         expect(answers).to be_empty
-        expect(pods.length).to eq 3
-        expect(pods[0].metadata.name).to eq('oldest-pod-0')
-        expect(pods[1].metadata.name).to eq('old-pod-0')
-        expect(pods[2].metadata.name).to eq('new-pod-0')
+        expect(pods.length).to eq 2
+        expect(pods[0].metadata.name).to eq('old-pod-0')
+        expect(pods[1].metadata.name).to eq('new-pod-0')
       end
 
       it 'should wait for all pods to be ready' do
@@ -108,10 +105,9 @@ describe KubeLinkSpecs do
         pods = specs.get_pods_for_role('dummy', 'dummy', wait_for_all: true)
         expect(pods).not_to be_empty
         expect(answers).to be_empty
-        expect(pods.length).to eq 3
-        expect(pods[0].metadata.name).to eq('oldest-pod-0')
-        expect(pods[1].metadata.name).to eq('old-pod-0')
-        expect(pods[2].metadata.name).to eq('new-pod-0')
+        expect(pods.length).to eq 2
+        expect(pods[0].metadata.name).to eq('old-pod-0')
+        expect(pods[1].metadata.name).to eq('new-pod-0')
       end
 
       it 'should accept the old pod as ready' do

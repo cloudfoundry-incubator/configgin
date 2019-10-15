@@ -71,12 +71,12 @@ class Configgin
     # Make sure the secret gets removed when the pod is deleted.
     secret.metadata.ownerReferences = [
       {
-        :apiVersion => pod.apiVersion,
-        :blockOwnerDeletion => false,
-        :controller => false,
-        :kind => pod.kind,
-        :name => pod.metadata.name,
-        :uid => pod.metadata.uid,
+        apiVersion: pod.apiVersion,
+        blockOwnerDeletion: false,
+        controller: false,
+        kind: pod.kind,
+        name: pod.metadata.name,
+        uid: pod.metadata.uid,
       }
     ]
 
