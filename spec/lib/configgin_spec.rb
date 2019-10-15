@@ -1,3 +1,4 @@
+require 'base64'
 require 'spec_helper'
 require 'configgin'
 
@@ -27,6 +28,8 @@ describe Configgin do
     allow(File).to receive(:read).and_call_original
     allow(File).to receive(:read).with('/var/vcap/jobs-src/loggregator_agent/config_spec.json')
                                  .and_return(File.read(fixture('nats-loggregator-config-spec.json')))
+    # exported properties secret is only created for the main instance group container
+    stub_const('ENV', 'KUBERNETES_CONTAINER_NAME' => 'instance-group')
   }
 
   describe '#run' do
@@ -77,12 +80,14 @@ describe Configgin do
       subject.run
       pod = client.get_pod('pod-0', 'the-namespace')
       expect(pod).not_to be_nil
-      statefulset = client.get_stateful_set('debugger', 'the-namespace')
+      statefulset = client.get_stateful_set('debugger', pod.metadata.namespace)
       expect(statefulset).not_to be_nil
+      secret = client.get_secret("#{pod.metadata.name}-#{pod.metadata.uid}", pod.metadata.namespace)
+      expect(secret).not_to be_nil
 
       exported_key = 'skiff-exported-digest-loggregator_agent'
       imported_key = 'skiff-in-props-instance-group-loggregator_agent'
-      expect(statefulset.spec.template.metadata.annotations[imported_key]).to eq pod.metadata.annotations[exported_key]
+      expect(statefulset.spec.template.metadata.annotations[imported_key]).to eq Base64.decode64(secret.data[exported_key])
     end
   end
 
@@ -116,13 +121,14 @@ describe Configgin do
       subject.patch_job_metadata(jobs)
       pod = client.get_pod('pod-0', 'the-namespace')
       expect(pod).not_to be_nil
-      annotations = pod.metadata.annotations
-      expect(annotations).not_to be_nil
+      secret = client.get_secret("#{pod.metadata.name}-#{pod.metadata.uid}")
+      expect(secret).not_to be_nil
+
       jobs.each do |name, job|
         property_name = "skiff-exported-properties-#{name}"
-        expect(annotations[property_name]).to eq job.exported_properties.to_json
+        expect(Base64.decode64(secret.data[property_name])).to eq job.exported_properties.to_json
         digest_name = "skiff-exported-digest-#{name}"
-        expect(annotations[digest_name]).to eq property_digest(job.exported_properties)
+        expect(Base64.decode64(secret.data[digest_name])).to eq property_digest(job.exported_properties)
       end
     end
 

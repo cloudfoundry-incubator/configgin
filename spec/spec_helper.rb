@@ -22,6 +22,16 @@ class MockKubeClient
     patch_object.call object, patch
   end
 
+  def _delete_single(type, name, namespace = nil)
+    (@state[type] ||= []).delete_if do |resource|
+      name == resource.metadata.name && (namespace.nil? || namespace == resource.metadata.namespace)
+    end
+  end
+
+  def _create_single(type, resource)
+    (@state[type] ||= []).push(resource)
+  end
+
   def _get_multiple(type, filters = {})
     items = (@state[type] || []).dup
     items.select! { |i| i.metadata.namespace == filters[:namespace] } unless filters[:namespace].nil?
@@ -43,12 +53,22 @@ class MockKubeClient
       raise "Don't know how to patch multiple #{type}s: #{name}" if name.to_s.end_with? 's'
 
       return _patch_single(type, *args)
+    elsif name.to_s.start_with? 'delete_'
+      type = name.to_s.sub(/^delete_/, '').sub(/s$/, '')
+      raise "Don't know how to delete multiple #{type}s: #{name}" if name.to_s.end_with? 's'
+
+      return _delete_single(type, *args)
+    elsif name.to_s.start_with? 'create_'
+      type = name.to_s.sub(/^create_/, '').sub(/s$/, '')
+      raise "Don't know how to create multiple #{type}s: #{name}" if name.to_s.end_with? 's'
+
+      return _create_single(type, *args)
     end
     super
   end
 
   def respond_to_missing?(method_name, include_private = false)
-    return true if /^(?:get|patch)_/ =~ method_name.to_s
+    return true if /^(?:get|patch|delete|create)_/ =~ method_name.to_s
 
     super
   end

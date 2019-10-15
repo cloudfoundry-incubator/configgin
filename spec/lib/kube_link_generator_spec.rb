@@ -40,9 +40,9 @@ describe KubeLinkSpecs do
         pods = specs.get_pods_for_role('dummy', 'dummy')
         expect(pods.length).to be 2
         expect(pods[0].metadata.name).to eq('old-pod-0')
-        expect(specs.get_exported_properties('dummy-role', pods[0], 'dummy')).to include('prop' => 'a')
+        expect(specs.get_exported_properties('dummy-role', pods[0], 'dummy')).to include('prop' => 'b')
         expect(pods[1].metadata.name).to eq('new-pod-0')
-        expect(specs.get_exported_properties('dummy-role', pods[1], 'dummy')).to include('prop' => 'b')
+        expect(specs.get_exported_properties('dummy-role', pods[1], 'dummy')).to include('prop' => 'c')
       end
 
       # Build a client with the given answers (sequentially)
@@ -113,7 +113,7 @@ describe KubeLinkSpecs do
       it 'should accept the old pod as ready' do
         answers = build_answers do |_, _, pods|
           pods.map! do |pod|
-            next pod if pod.metadata.name.start_with? 'old'
+            next pod if pod.metadata.name == 'old-pod-0'
 
             # Drop the podIP
             status = OpenStruct.new(pod.status.to_h.merge(podIP: nil)).freeze

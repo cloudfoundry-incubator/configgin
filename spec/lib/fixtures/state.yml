@@ -4,10 +4,10 @@ pod:
 - metadata:
     name: pod-0
     namespace: the-namespace
-    annotations:
-      skiff-exported-properties-unused: '{}'
+    annotations: {}
     labels:
       app.kubernetes.io/component: fake
+    uid: BOGUS-UID
   status:
     podIP: '192.168.2.67'
     containerStatuses:
@@ -21,10 +21,10 @@ pod:
 - metadata:
     name: other-234z234
     namespace: the-namespace
-    annotations:
-      skiff-exported-properties-provider-job: '{"hello":{"world":"ohai"}}'
+    annotations: {}
     labels:
       app.kubernetes.io/component: provider-role
+    uid: FAKE-UID
   spec:
     containers:
     - image: docker.io/image-one
@@ -34,6 +34,20 @@ pod:
     containerStatuses:
     - imageID: docker://image-one
     - imageID: docker://image-two
+
+secret:
+- metadata:
+    name: pod-0-BOGUS-UID
+    namespace: the-namespace
+  data:
+    # echo '{}' | base64
+    skiff-exported-properties-unused: "e30K"
+- metadata:
+    name: other-234z234-FAKE-UID
+    namespace: the-namespace
+  data:
+    # echo '{"hello":{"world":"ohai"}}' | base64
+    skiff-exported-properties-provider-job: "eyJoZWxsbyI6eyJ3b3JsZCI6Im9oYWkifX0K"
 
 service:
 - metadata:
