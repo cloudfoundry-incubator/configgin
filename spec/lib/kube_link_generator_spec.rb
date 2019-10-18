@@ -8,7 +8,8 @@ describe KubeLinkSpecs do
     let(:namespace) { 'namespace' }
     let(:client) { MockKubeClient.new(fixture('state-multi.yml')) }
     let(:client_stateful_set) { MockKubeClient.new(fixture('stateful-set.yml')) }
-    subject(:specs) { KubeLinkSpecs.new(bosh_spec, namespace, client, client_stateful_set) }
+    let(:self_pod) { convert_to_openstruct(YAML.load_file(fixture('state-jobless-properties.yml')))['pod'][1] }
+    subject(:specs) { KubeLinkSpecs.new(bosh_spec, namespace, client, client_stateful_set, self_pod) }
 
     before do
       allow(ENV).to receive(:[]).and_wrap_original do |env, name|
@@ -40,9 +41,9 @@ describe KubeLinkSpecs do
         pods = specs.get_pods_for_role('dummy', 'dummy')
         expect(pods.length).to be 2
         expect(pods[0].metadata.name).to eq('old-pod-0')
-        expect(specs.get_exported_properties('dummy-role', pods[0], 'dummy')).to include('prop' => 'b')
+        expect(specs.get_exported_properties(pods[0], 'dummy')).to include('prop' => 'b')
         expect(pods[1].metadata.name).to eq('new-pod-0')
-        expect(specs.get_exported_properties('dummy-role', pods[1], 'dummy')).to include('prop' => 'c')
+        expect(specs.get_exported_properties(pods[1], 'dummy')).to include('prop' => 'c')
       end
 
       # Build a client with the given answers (sequentially)

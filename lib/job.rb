@@ -9,7 +9,7 @@ class Job
     @namespace = namespace
     @client = client
     @self_name = self_name
-    links = @spec['links'] = KubeLinkSpecs.new(@spec, @namespace, @client, client_stateful_set)
+    links = @spec['links'] = KubeLinkSpecs.new(@spec, @namespace, @client, client_stateful_set, self_pod)
 
     # Figure out whether _this_ should bootstrap
     pods = @client.get_pods(namespace: @namespace, label_selector: "app.kubernetes.io/component=#{self_role}")

@@ -10,19 +10,24 @@ class KubeLinkSpecs
   # ANNOTATION_AZ is the Kube annotation for the (availability) zone
   ANNOTATION_AZ = 'failure-domain.beta.kubernetes.io/zone'.freeze
 
-  def initialize(spec, namespace, kube_client, kube_client_stateful_set)
+  def initialize(spec, namespace, kube_client, kube_client_stateful_set, self_pod)
     @links = {}
     @client = kube_client
     @client_stateful_set = kube_client_stateful_set
+    @self_pod = self_pod
     @namespace = namespace
     @spec = spec || {}
   end
 
-  attr_reader :client, :spec, :namespace
+  attr_reader :client, :spec, :namespace, :self_pod
   SLEEP_DURATION = 1
 
   def this_name
     spec['job']['name']
+  end
+
+  def role(pod)
+    pod['metadata']['labels']['app.kubernetes.io/component']
   end
 
   # pod_index returns a number for the given pod name. The number is expected to
@@ -86,15 +91,25 @@ class KubeLinkSpecs
     end
   end
 
-  def patch_pod_with_imported_properties(role_name, job_name, digest)
-    client.patch_pod(
-      ENV['HOSTNAME'],
-      { metadata: { annotations: { :"skiff-in-props-#{role_name}-#{job_name}" => digest } } },
-      namespace
-    )
+  def no_found(pod, job_name)
+    $stdout.puts "NOT FOUND self_pod: #{self_pod.metadata}"
+    $stdout.puts "NOT FOUND pod: #{pod.metadata}"
+    $stdout.puts "NOT FOUND job_name: #{job_name}"
+    # sleep(3600)
+    # exit(1)
+    return {}
   end
 
-  def get_exported_properties(role_name, pod, job_name)
+  def get_exported_properties(pod, job_name)
+    digest_name = "skiff-exported-digest-#{job_name}"
+    import_name = "skiff-in-props-#{role(pod)}-#{job_name}"
+    property_name = "skiff-exported-properties-#{job_name}"
+
+    if role(pod) != role(self_pod) && self_pod.metadata.annotations[import_name].nil?
+      $stderr.puts "#{self_pod.metadata.name} doesn't have #{import_name} annotation"
+      exit(1)
+    end
+
     # Exported properties are stored in a secret linked to the pod by naming convention.
     begin
       secret = client.get_secret("#{pod.metadata.name}-#{pod.metadata.uid}", namespace)
@@ -102,23 +117,19 @@ class KubeLinkSpecs
     end
 
     if !secret.nil?
-      digest = secret.data["skiff-exported-digest-#{job_name}"]
-      # digest not being set only happens during the spec tests???
-      if digest
-        # Copy the digest over, so that if the source role changes we can be restarted.
-        patch_pod_with_imported_properties(role_name, job_name, Base64.decode64(digest))
+      if role(pod) != role(self_pod)
+        digest = Base64.decode64(secret.data[digest_name])
+        return no_found(pod, job_name) unless digest == self_pod.metadata.annotations[import_name]
       end
-      JSON.parse(Base64.decode64(secret.data["skiff-exported-properties-#{job_name}"]))
+      JSON.parse(Base64.decode64(secret.data[property_name]))
 
     # Older implementation stored exported properties in annotations (one per job).
-    elsif pod.metadata.annotations["skiff-exported-properties-#{job_name}"]
-      # digest not being set only happens during the spec tests???
-      if pod.metadata.annotations["skiff-exported-digest-#{job_name}"]
-        # Copy the digest over, so that if the source role changes we can be restarted.
-        digest = pod.metadata.annotations["skiff-exported-digest-#{job_name}"]
-        patch_pod_with_imported_properties(role_name, job_name, digest)
+    elsif pod.metadata.annotations[property_name]
+      if role(pod) != role(self_pod)
+        digest = pod.metadata.annotations[digest_name]
+        return no_found(pod, job_name) unless digest == self_pod.metadata.annotations[import_name]
       end
-      JSON.parse(pod.metadata.annotations["skiff-exported-properties-#{job_name}"])
+      JSON.parse(pod.metadata.annotations[property_name])
 
     else
       {}
@@ -134,7 +145,7 @@ class KubeLinkSpecs
       'id' => pod.metadata.name,
       'az' => pod.metadata.annotations['failure-domain.beta.kubernetes.io/zone'] || 'az0',
       'address' => "#{pod.metadata.name}.#{pod.spec.subdomain}.#{ENV['KUBERNETES_NAMESPACE']}.svc.#{ENV['KUBERNETES_CLUSTER_DOMAIN']}",
-      'properties' => get_exported_properties(role_name, pod, job),
+      'properties' => get_exported_properties(pod, job),
       'bootstrap' => pods_per_image[pod.metadata.uid] < 2
     }
   end
@@ -166,7 +177,7 @@ class KubeLinkSpecs
       'id' => svc.metadata.name,
       'az' => pod.metadata.annotations['failure-domain.beta.kubernetes.io/zone'] || 'az0',
       'address' => svc.spec.clusterIP,
-      'properties' => get_exported_properties(role_name, pod, job),
+      'properties' => get_exported_properties(pod, job),
       'bootstrap' => true
     }
   end
@@ -182,7 +193,7 @@ class KubeLinkSpecs
         'id' => ss.metadata.name,
         'az' => pod.metadata.annotations['failure-domain.beta.kubernetes.io/zone'] || 'az0',
         'address' => "#{ss.metadata.name}-#{i}.#{ss.spec.serviceName}",
-        'properties' => get_exported_properties(role_name, pod, job),
+        'properties' => get_exported_properties(pod, job),
         'bootstrap' => i.zero?
       }
     end

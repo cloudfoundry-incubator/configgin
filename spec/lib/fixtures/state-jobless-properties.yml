@@ -43,5 +43,5 @@ secret:
     # echo '{"prop": "c"}' | base64
     skiff-exported-properties-dummy: "eyJwcm9wIjogImMifQo="
     # NOT the correct digest!
-    # echo sha1:adc83b19e793491b1c6ea0fd8b46cd9f32e592fc | base64
-    # skiff-exported-digest-dummy: "c2hhMTphZGM4M2IxOWU3OTM0OTFiMWM2ZWEwZmQ4YjQ2Y2Q5ZjMyZTU5MmZjCg=="
+    # printf sha1:adc83b19e793491b1c6ea0fd8b46cd9f32e592fc | base64
+    skiff-exported-digest-dummy: "c2hhMTphZGM4M2IxOWU3OTM0OTFiMWM2ZWEwZmQ4YjQ2Y2Q5ZjMyZTU5MmZj"
