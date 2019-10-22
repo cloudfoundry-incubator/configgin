@@ -115,6 +115,9 @@ class Configgin
   # patch the StatefulSets such that they will be restarted.
   def restart_affected_pods(expected_annotations)
     expected_annotations.each_pair do |instance_group_name, digests|
+      # Avoid restarting our own pod
+      next if instance_group_name == instance_group
+
       begin
         kube_client_stateful_set.patch_stateful_set(
           instance_group_name,
@@ -196,7 +199,7 @@ class Configgin
   end
 
   def instance_group
-    pod = kube_client.get_pod(@self_name, kube_namespace)
-    pod['metadata']['labels']['app.kubernetes.io/component']
+    @pod ||= kube_client.get_pod(@self_name, kube_namespace)
+    @pod['metadata']['labels']['app.kubernetes.io/component']
   end
 end
