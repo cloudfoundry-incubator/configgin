@@ -27,6 +27,7 @@ class Configgin
     job_digests = patch_job_metadata(jobs)
     render_job_templates(jobs, @job_configs)
     restart_affected_pods expected_annotations(@job_configs, job_digests)
+    # enable_affected_containers
   end
 
   def generate_jobs(job_configs, templates)
@@ -56,6 +57,39 @@ class Configgin
       )
     end
     jobs
+  end
+
+  def enable_affected_containers
+    return unless instance_group == ENV["KUBERNETES_CONTAINER_NAME"]
+
+    version_tag = ENV["CONFIGGIN_VERSION_TAG"]
+    return unless version_tag
+
+    begin
+      secret = kube_client.get_secret(instance_group, kube_namespace)
+      secret.data[version_tag] = ""
+      kube_client.update_secret(secret)
+    rescue KubeException => e
+      STDERR.puts e
+      sts = kube_client_stateful_set.get_stateful_set(instance_group, kube_namespace)
+      secret = Kubeclient::Resource.new
+      secret.metadata = {
+        name: sts.metadata.name,
+        namespace: kube_namespace,
+        ownerReferences:  [
+          {
+            apiVersion: sts.apiVersion,
+            blockOwnerDeletion: false,
+            controller: false,
+            kind: sts.kind,
+            name: sts.metadata.name,
+            uid: sts.metadata.uid,
+          }
+        ]
+      }
+      secret.data = {version_tag => ""}
+      kube_client.create_secret(secret)
+    end
   end
 
   # Set the exported properties and their digests, and return the digests.
@@ -114,35 +148,75 @@ class Configgin
   # the annotations expected on the pods (keyed by the instance group name),
   # patch the StatefulSets such that they will be restarted.
   def restart_affected_pods(expected_annotations)
-    expected_annotations.each_pair do |instance_group_name, digests|
-      # Avoid restarting our own pod
-      next if instance_group_name == instance_group
+    return unless instance_group == ENV["KUBERNETES_CONTAINER_NAME"]
 
+    secret = nil
+    version_tag = ENV["CONFIGGIN_VERSION_TAG"]
+    if version_tag
       begin
-        kube_client_stateful_set.patch_stateful_set(
-          instance_group_name,
-          { spec: { template: { metadata: { annotations: digests } } } },
-          kube_namespace
-        )
-        warn "Patched StatefulSet #{instance_group_name} for new exported digests"
-      rescue KubeException => e
+        secret = kube_client.get_secret(instance_group, kube_namespace)
+      rescue
+      end
+    end
+
+    if !version_tag || (secret && secret.data[version_tag])
+      expected_annotations.each_pair do |instance_group_name, digests|
+        # Avoid restarting our own pod
+        next if instance_group_name == instance_group
+
         begin
+          kube_client_stateful_set.patch_stateful_set(
+            instance_group_name,
+            { spec: { template: { metadata: { annotations: digests } } } },
+            kube_namespace
+          )
+          warn "Patched StatefulSet #{instance_group_name} for new exported digests"
+        rescue KubeException => e
           begin
-            response = JSON.parse(e.response || '')
-          rescue JSON::ParseError
-            response = {}
+            begin
+              response = JSON.parse(e.response || '')
+            rescue JSON::ParseError
+              response = {}
+            end
+            if response['reason'] == 'NotFound'
+              # The StatefulSet can be missing if we're configured to not have an
+              # optional instance group.
+              warn "Skipping patch of non-existant StatefulSet #{instance_group_name}"
+              next
+            end
+            warn "Error patching #{instance_group_name}: #{response.to_json}"
+            raise
           end
-          if response['reason'] == 'NotFound'
-            # The StatefulSet can be missing if we're configured to not have an
-            # optional instance group.
-            warn "Skipping patch of non-existant StatefulSet #{instance_group_name}"
-            next
-          end
-          warn "Error patching #{instance_group_name}: #{response.to_json}"
-          raise
         end
       end
     end
+
+    return unless version_tag
+
+    if secret
+      secret.data[version_tag] = ""
+      kube_client.update_secret(secret)
+    else
+      sts = kube_client_stateful_set.get_stateful_set(instance_group, kube_namespace)
+      secret = Kubeclient::Resource.new
+      secret.metadata = {
+        name: sts.metadata.name,
+        namespace: kube_namespace,
+        ownerReferences:  [
+          {
+            apiVersion: sts.apiVersion,
+            blockOwnerDeletion: false,
+            controller: false,
+            kind: sts.kind,
+            name: sts.metadata.name,
+            uid: sts.metadata.uid,
+          }
+        ]
+      }
+      secret.data = {version_tag => ""}
+      kube_client.create_secret(secret)
+    end
+
   end
 
   # Given the active jobs, and a hash of the expected annotations for each,
