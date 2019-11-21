@@ -69,7 +69,9 @@ class Configgin
 
   # Write exported properties to secret and potentially restart affected pods.
   def export_job_properties(jobs)
+    # co-located containers don't get to export properties
     return unless instance_group == ENV["KUBERNETES_CONTAINER_NAME"]
+    # jobs don't export properties
     return unless self_pod['metadata']['ownerReferences'][0]['kind'] == "StatefulSet"
 
     sts = kube_client_stateful_set.get_stateful_set(instance_group, kube_namespace)
@@ -91,7 +93,6 @@ class Configgin
         }
       ]
     }
-    secret.data ||= {}
     begin
       kube_client.create_secret(secret)
     rescue
@@ -100,10 +101,8 @@ class Configgin
     secret.data ||= {}
 
     version_tag = ENV["CONFIGGIN_VERSION_TAG"]
-    new_tag = !secret.data[version_tag]
-    if new_tag
-      secret.data = {version_tag => ""}
-    end
+    new_tag = !secret.data.has_key?(version_tag)
+    secret.data = {version_tag => ""} if new_tag # make sure old properties are deleted during upgrade
 
     digests = {}
     jobs.each do |name, job|
@@ -111,14 +110,12 @@ class Configgin
       secret.data["skiff-exported-properties-#{name}"] = Base64.encode64(job.exported_properties.to_json)
 
       encoded_digest = Base64.encode64(digests[name])
-      # XXX do we actually need these?
-      # secret.data["skiff-exported-digest-#{name}"] = encoded_digest
 
       # Record initial digest values whenever the tag changes, in which case the pod startup
       # order is already controlled by the "CONFIGGIN_IMPORT_#{role}" references to the new
-      # tags in the corresponding secrets. A missing import annotation reflects this set of
-      # exported properties because the sts as deployed by helm doesn't have any annotation
-      # and we don't want to trigger a redundant pod restart by adding them.
+      # tags in the corresponding secrets. There is no annotation when importing this set of
+      # initial values because the helm chart doesn't include any annotations, and we don't
+      # want to trigger a pod restart by adding them.
       if new_tag
         secret.data["skiff-initial-digest-#{name}"] = encoded_digest
       end

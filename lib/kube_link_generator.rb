@@ -76,6 +76,9 @@ class KubeLinkSpecs
   end
 
   def get_exported_properties(role_name, job_name)
+    # Containers are not starting until all the properties they want to import already exist.
+    # This is done using the CONFIGGIN_IMPORT_ROLE environment variables referencing the version
+    # tag in the corresponding secret.
     secret = client.get_secret(role_name, namespace)
     JSON.parse(Base64.decode64(secret.data["skiff-exported-properties-#{job_name}"]))
   end
