@@ -62,19 +62,8 @@ class KubeLinkSpecs
       30.times do
         1.times do
           pods = _get_pods_for_role(role_name, sts_image)
-          good_pods = pods.select do |pod|
-            next false unless pod.status.podIP
-            begin
-              secret = client.get_secret("#{pod.metadata.name}-#{pod.metadata.uid}", namespace)
-              next true if secret.data["skiff-exported-properties-#{job}"]
-
-            rescue
-              pod.metadata.annotations["skiff-exported-properties-#{job}"]
-            end
-          end
-
+          good_pods = pods.select { |pod| pod.status.podIP }
           if options[:wait_for_all]
-            # Wait until all pods have IP addresses and properties
             break unless good_pods.length == pods.length
           end
           return good_pods unless good_pods.empty?
@@ -86,43 +75,12 @@ class KubeLinkSpecs
     end
   end
 
-  def patch_pod_with_imported_properties(role_name, job_name, digest)
-    client.patch_pod(
-      ENV['HOSTNAME'],
-      { metadata: { annotations: { :"skiff-in-props-#{role_name}-#{job_name}" => digest } } },
-      namespace
-    )
-  end
-
-  def get_exported_properties(role_name, pod, job_name)
-    # Exported properties are stored in a secret linked to the pod by naming convention.
-    begin
-      secret = client.get_secret("#{pod.metadata.name}-#{pod.metadata.uid}", namespace)
-    rescue
-    end
-
-    if !secret.nil?
-      digest = secret.data["skiff-exported-digest-#{job_name}"]
-      # digest not being set only happens during the spec tests???
-      if digest
-        # Copy the digest over, so that if the source role changes we can be restarted.
-        patch_pod_with_imported_properties(role_name, job_name, Base64.decode64(digest))
-      end
-      JSON.parse(Base64.decode64(secret.data["skiff-exported-properties-#{job_name}"]))
-
-    # Older implementation stored exported properties in annotations (one per job).
-    elsif pod.metadata.annotations["skiff-exported-properties-#{job_name}"]
-      # digest not being set only happens during the spec tests???
-      if pod.metadata.annotations["skiff-exported-digest-#{job_name}"]
-        # Copy the digest over, so that if the source role changes we can be restarted.
-        digest = pod.metadata.annotations["skiff-exported-digest-#{job_name}"]
-        patch_pod_with_imported_properties(role_name, job_name, digest)
-      end
-      JSON.parse(pod.metadata.annotations["skiff-exported-properties-#{job_name}"])
-
-    else
-      {}
-    end
+  def get_exported_properties(role_name, job_name)
+    # Containers are not starting until all the properties they want to import already exist.
+    # This is done using the CONFIGGIN_IMPORT_ROLE environment variables referencing the version
+    # tag in the corresponding secret.
+    secret = client.get_secret(role_name, namespace)
+    JSON.parse(Base64.decode64(secret.data["skiff-exported-properties-#{job_name}"]))
   end
 
   def get_pod_instance_info(role_name, pod, job, pods_per_image)
@@ -134,7 +92,7 @@ class KubeLinkSpecs
       'id' => pod.metadata.name,
       'az' => pod.metadata.annotations['failure-domain.beta.kubernetes.io/zone'] || 'az0',
       'address' => "#{pod.metadata.name}.#{pod.spec.subdomain}.#{ENV['KUBERNETES_NAMESPACE']}.svc.#{ENV['KUBERNETES_CLUSTER_DOMAIN']}",
-      'properties' => get_exported_properties(role_name, pod, job),
+      'properties' => get_exported_properties(role_name, job),
       'bootstrap' => pods_per_image[pod.metadata.uid] < 2
     }
   end
@@ -164,9 +122,10 @@ class KubeLinkSpecs
       'name' => svc.metadata.name,
       'index' => 0, # Completely made up index; there is only ever one service
       'id' => svc.metadata.name,
+      # XXX bogus, but what can we do?
       'az' => pod.metadata.annotations['failure-domain.beta.kubernetes.io/zone'] || 'az0',
       'address' => svc.spec.clusterIP,
-      'properties' => get_exported_properties(role_name, pod, job),
+      'properties' => get_exported_properties(role_name, job),
       'bootstrap' => true
     }
   end
@@ -182,7 +141,8 @@ class KubeLinkSpecs
         'id' => ss.metadata.name,
         'az' => pod.metadata.annotations['failure-domain.beta.kubernetes.io/zone'] || 'az0',
         'address' => "#{ss.metadata.name}-#{i}.#{ss.spec.serviceName}",
-        'properties' => get_exported_properties(role_name, pod, job),
+        'properties' => get_exported_properties(role_name, job),
+        # XXX not actually correct during updates
         'bootstrap' => i.zero?
       }
     end

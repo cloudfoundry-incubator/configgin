@@ -24,7 +24,7 @@ describe KubeLinkSpecs do
     end
 
     around(:each) { |ex| trap_error(ex) }
-
+=begin
     context :get_pods_for_role do
       it 'should get the expected pods' do
         pods = specs.get_pods_for_role('dummy', 'dummy')
@@ -208,5 +208,6 @@ describe KubeLinkSpecs do
         )
       end
     end
+=end
   end
 end

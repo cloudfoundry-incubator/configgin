@@ -7,6 +7,8 @@ pod:
     annotations: {}
     labels:
       app.kubernetes.io/component: fake
+    ownerReferences:
+    - kind: StatefulSet
     uid: BOGUS-UID
   status:
     podIP: '192.168.2.67'
@@ -82,3 +84,6 @@ stateful_set:
         containers:
         - image: docker.io/image-one
         - image: docker.io/image-two
+- metadata:
+    name: instance-group
+    namespace: the-namespace

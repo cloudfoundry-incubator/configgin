@@ -24,9 +24,8 @@ class Configgin
 
   def run
     jobs = generate_jobs(@job_configs, @templates)
-    job_digests = patch_job_metadata(jobs)
+    export_job_properties(jobs)
     render_job_templates(jobs, @job_configs)
-    restart_affected_pods expected_annotations(@job_configs, job_digests)
   end
 
   def generate_jobs(job_configs, templates)
@@ -58,48 +57,6 @@ class Configgin
     jobs
   end
 
-  # Set the exported properties and their digests, and return the digests.
-  def patch_job_metadata(jobs)
-    pod = kube_client.get_pod(@self_name, kube_namespace)
-
-    secret = Kubeclient::Resource.new
-    secret.metadata = {}
-    # Prefixing with pod.metadata.name is purely for human convenience/debugging.
-    secret.metadata.name = "#{pod.metadata.name}-#{pod.metadata.uid}"
-    secret.metadata.namespace = kube_namespace
-
-    # Make sure the secret gets removed when the pod is deleted.
-    secret.metadata.ownerReferences = [
-      {
-        apiVersion: pod.apiVersion,
-        blockOwnerDeletion: false,
-        controller: false,
-        kind: pod.kind,
-        name: pod.metadata.name,
-        uid: pod.metadata.uid,
-      }
-    ]
-
-    secret.data = {}
-    digests = {}
-    jobs.each do |name, job|
-      digests[name] = property_digest(job.exported_properties)
-      secret.data["skiff-exported-properties-#{name}"] = Base64.encode64(job.exported_properties.to_json)
-      secret.data["skiff-exported-digest-#{name}"] = Base64.encode64(digests[name])
-    end
-
-    # Only the main container gets to export properties; colocated sidecars don't.
-    if instance_group == ENV["KUBERNETES_CONTAINER_NAME"]
-      begin
-        kube_client.delete_secret(secret.metadata.name, kube_namespace)
-      rescue
-      end
-      kube_client.create_secret(secret)
-    end
-
-    digests
-  end
-
   def render_job_templates(jobs, job_configs)
     jobs.each do |job_name, job|
       dns_encoder = KubeDNSEncoder.new(job.spec['links'])
@@ -110,21 +67,76 @@ class Configgin
     end
   end
 
-  # Some pods might have depended on the properties exported by this pod; given
-  # the annotations expected on the pods (keyed by the instance group name),
-  # patch the StatefulSets such that they will be restarted.
-  def restart_affected_pods(expected_annotations)
-    expected_annotations.each_pair do |instance_group_name, digests|
+  # Write exported properties to secret and potentially restart affected pods.
+  def export_job_properties(jobs)
+    # co-located containers don't get to export properties
+    return unless instance_group == ENV["KUBERNETES_CONTAINER_NAME"]
+    # jobs don't export properties
+    return unless self_pod['metadata']['ownerReferences'][0]['kind'] == "StatefulSet"
+
+    sts = kube_client_stateful_set.get_stateful_set(instance_group, kube_namespace)
+
+    # Make sure the secret attached to the stateful set exists.
+    # XXX This should probably be done by fissile via the helm chart.
+    secret = Kubeclient::Resource.new
+    secret.metadata = {
+      name: sts.metadata.name,
+      namespace: kube_namespace,
+      ownerReferences:  [
+        {
+          apiVersion: sts.apiVersion,
+          blockOwnerDeletion: false,
+          controller: false,
+          kind: sts.kind,
+          name: sts.metadata.name,
+          uid: sts.metadata.uid,
+        }
+      ]
+    }
+    begin
+      kube_client.create_secret(secret)
+    rescue
+    end
+    secret = kube_client.get_secret(instance_group, kube_namespace)
+    secret.data ||= {}
+
+    version_tag = ENV["CONFIGGIN_VERSION_TAG"]
+    new_tag = !secret.data[version_tag]
+    secret.data = {version_tag => ""} if new_tag # make sure old properties are deleted during upgrade
+
+    digests = {}
+    jobs.each do |name, job|
+      digests[name] = property_digest(job.exported_properties)
+      secret.data["skiff-exported-properties-#{name}"] = Base64.encode64(job.exported_properties.to_json)
+
+      encoded_digest = Base64.encode64(digests[name])
+
+      # Record initial digest values whenever the tag changes, in which case the pod startup
+      # order is already controlled by the "CONFIGGIN_IMPORT_#{role}" references to the new
+      # tags in the corresponding secrets. There is no annotation when importing this set of
+      # initial values because the helm chart doesn't include any annotations, and we don't
+      # want to trigger a pod restart by adding them.
+      if new_tag
+        secret.data["skiff-initial-digest-#{name}"] = encoded_digest
+      end
+      if secret.data["skiff-initial-digest-#{name}"] == encoded_digest
+        digests[name] = nil
+      end
+    end
+
+    kube_client.update_secret(secret)
+
+    return if new_tag
+
+    # Some pods might have depended on the properties exported by this pod; given
+    # the annotations expected on the pods (keyed by the instance group name),
+    # patch the StatefulSets such that they will be restarted.
+    expected_annotations(@job_configs, digests).each_pair do |instance_group_name, digests|
       # Avoid restarting our own pod
       next if instance_group_name == instance_group
 
       begin
-        kube_client_stateful_set.patch_stateful_set(
-          instance_group_name,
-          { spec: { template: { metadata: { annotations: digests } } } },
-          kube_namespace
-        )
-        warn "Patched StatefulSet #{instance_group_name} for new exported digests"
+        sts = kube_client_stateful_set.get_stateful_set(instance_group_name, kube_namespace)
       rescue KubeException => e
         begin
           begin
@@ -142,6 +154,18 @@ class Configgin
           raise
         end
       end
+
+      annotations = sts.spec.template.metadata.annotations
+      digests.each_pair do |key, value|
+        annotations[key] = value
+      end
+
+      kube_client_stateful_set.merge_patch_stateful_set(
+        instance_group_name,
+        { spec: { template: { metadata: { annotations: annotations } } } },
+        kube_namespace
+      )
+      warn "Patched StatefulSet #{instance_group_name} for new exported digests"
     end
   end
 
@@ -198,8 +222,11 @@ class Configgin
     @kube_client_stateful_set ||= create_kube_client(path: '/apis/apps')
   end
 
-  def instance_group
+  def self_pod
     @pod ||= kube_client.get_pod(@self_name, kube_namespace)
-    @pod['metadata']['labels']['app.kubernetes.io/component']
+  end
+
+  def instance_group
+    self_pod['metadata']['labels']['app.kubernetes.io/component']
   end
 end
