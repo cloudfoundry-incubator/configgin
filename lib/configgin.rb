@@ -101,7 +101,7 @@ class Configgin
     secret.data ||= {}
 
     version_tag = ENV["CONFIGGIN_VERSION_TAG"]
-    new_tag = !secret.data.has_key?(version_tag)
+    new_tag = !secret.data[version_tag]
     secret.data = {version_tag => ""} if new_tag # make sure old properties are deleted during upgrade
 
     digests = {}
