@@ -126,8 +126,6 @@ class Configgin
 
     kube_client.update_secret(secret)
 
-    return if new_tag
-
     # Some pods might have depended on the properties exported by this pod; given
     # the annotations expected on the pods (keyed by the instance group name),
     # patch the StatefulSets such that they will be restarted.
@@ -155,7 +153,10 @@ class Configgin
         end
       end
 
-      annotations = sts.spec.template.metadata.annotations
+      annotations = {}
+      sts.spec.template.metadata.annotations.each_pair do |key, value|
+        annotations[key] = value
+      end
       digests.each_pair do |key, value|
         annotations[key] = value
       end
