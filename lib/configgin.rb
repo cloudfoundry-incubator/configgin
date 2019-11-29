@@ -190,7 +190,7 @@ class Configgin
   end
 
   def kube_token
-    @kube_token ||= File.read("#{SVC_ACC_PATH}/token")
+    @kube_token ||= ENV['CONFIGGIN_SA_TOKEN'] || File.read("#{SVC_ACC_PATH}/token")
   end
 
   private
