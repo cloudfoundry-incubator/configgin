@@ -34,17 +34,6 @@ describe KubeLinkSpecs do
         expect(pods[2].metadata.name).to eq('bootstrap-pod-3')
       end
 
-      it 'should find pods from before jobs in properties' do
-        client = MockKubeClient.new(fixture('state-jobless-properties.yml'))
-        allow(specs).to receive(:client) { client }
-        pods = specs.get_pods_for_role('dummy', 'dummy')
-        expect(pods.length).to be 2
-        expect(pods[0].metadata.name).to eq('old-pod-0')
-        expect(specs.get_exported_properties('dummy-role', pods[0], 'dummy')).to include('prop' => 'b')
-        expect(pods[1].metadata.name).to eq('new-pod-0')
-        expect(specs.get_exported_properties('dummy-role', pods[1], 'dummy')).to include('prop' => 'c')
-      end
-
       # Build a client with the given answers (sequentially)
       # The block will be called with the current index, total count, and the unmodified pods
       def build_answers
@@ -165,7 +154,7 @@ describe KubeLinkSpecs do
 
     context :get_pod_instance_info do
       it 'should return the expected information' do
-        role = 'dummy-role'
+        role = 'dummy'
         job = 'dummy'
         sts_image = "docker.io/image-one\ndocker.io/image-two"
         pods = specs._get_pods_for_role(job, sts_image)
@@ -182,8 +171,9 @@ describe KubeLinkSpecs do
           'properties' => {}
         )
       end
+
       it 'should not be bootstrap with multiple pods of the same images' do
-        role = 'dummy-role'
+        role = 'dummy'
         job = 'dummy'
         sts_image = "docker.io/image-one\ndocker.io/image-two"
         pods = specs._get_pods_for_role(job, sts_image)

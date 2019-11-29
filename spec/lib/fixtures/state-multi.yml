@@ -80,40 +80,11 @@ pod:
 
 secret:
 - metadata:
-    name: ready-pod-0-893dd4a8-2067-44d3-aae7-1389f6a1789a
+    name: dummy
     namespace: namespace
   data:
     # echo '{}' | base64
     skiff-exported-properties-dummy: "e30K"
-    # skiff-exported-digest-dummy: "ready-digest"
-- metadata:
-    name: ready-pod-too-0-fed899c8-0140-48fd-ac88-772368bde1f9
-    namespace: namespace
-  data:
-    # echo '{}' | base64
-    skiff-exported-properties-dummy: "e30K"
-    # skiff-exported-digest-dummy: "ready-digest"
-- metadata:
-    name: bootstrap-pod-3-9091e7e7-ec89-453b-b5ca-352a47772fe9
-    namespace: namespace
-  data:
-    # echo '{}' | base64
-    skiff-exported-properties-dummy: "e30K"
-    # skiff-exported-digest-dummy: "ready-digest"
-- metadata:
-    name: unrelated-pod-0-4d287101-9dba-4ae7-9447-3f3a3989badf
-    namespace: namespace
-  data:
-    # echo '{}' | base64
-    skiff-exported-properties-dummy: "e30K"
-    # skiff-exported-digest-dummy: "ready-digest"
-- metadata:
-    name: pending-pod-0-650aa4a8-2034-55c1-gge9-2451d6a2799b
-    namespace: namespace
-  data:
-    # echo '{}' | base64
-    skiff-exported-properties-dummy: "e30K"
-    # skiff-exported-digest-dummy: "ready-digest"
 
 service:
 - metadata:

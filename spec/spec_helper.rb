@@ -9,13 +9,21 @@ class MockKubeClient
     items.first
   end
 
-  def _patch_single(type, name, patch, namespace = nil)
+  def _patch_single(type, patch_type, name, patch, namespace = nil)
     object = _get_single(type, name, namespace)
     raise %(Could not find #{type} "#{namespace}/#{name}" to patch) unless object
 
     patch_object = lambda do |child_obj, child_patch|
       child_patch.each_pair do |k, v|
-        child_obj[k] = v.is_a?(Hash) ? patch_object.call(child_obj[k] || OpenStruct.new, v) : v
+        if v.is_a?(Hash)
+          child_obj[k] = patch_object.call(child_obj[k] || OpenStruct.new, v)
+        else
+          if v.nil? && patch_type == "merge"
+            child_obj.delete_field(k) if child_obj[k]
+          else
+            child_obj[k] = v
+          end
+        end
       end
       child_obj
     end
@@ -30,6 +38,14 @@ class MockKubeClient
 
   def _create_single(type, resource)
     (@state[type] ||= []).push(resource)
+  end
+
+  def _update_single(type, resource)
+    object = _get_single(type, resource.metadata.name, resource.metadata.namespace)
+    raise %(Could not find #{type} "#{resource.metadata.namespace}/#{resource.metadata.name}" to patch) unless object
+
+    object.delete_if { true }
+    resource.each_pair { |k, v| object[k] = v }
   end
 
   def _get_multiple(type, filters = {})
@@ -52,7 +68,7 @@ class MockKubeClient
       type = name.to_s.sub(/^patch_/, '').sub(/s$/, '')
       raise "Don't know how to patch multiple #{type}s: #{name}" if name.to_s.end_with? 's'
 
-      return _patch_single(type, *args)
+      return _patch_single(type, "strategic", *args)
     elsif name.to_s.start_with? 'delete_'
       type = name.to_s.sub(/^delete_/, '').sub(/s$/, '')
       raise "Don't know how to delete multiple #{type}s: #{name}" if name.to_s.end_with? 's'
@@ -63,12 +79,22 @@ class MockKubeClient
       raise "Don't know how to create multiple #{type}s: #{name}" if name.to_s.end_with? 's'
 
       return _create_single(type, *args)
+    elsif name.to_s.start_with? 'update_'
+      type = name.to_s.sub(/^update_/, '').sub(/s$/, '')
+      raise "Don't know how to update multiple #{type}s: #{name}" if name.to_s.end_with? 's'
+
+      return _update_single(type, *args)
+    elsif name.to_s.start_with? 'merge_patch_'
+      type = name.to_s.sub(/^merge_patch_/, '').sub(/s$/, '')
+      raise "Don't know how to merge_patch multiple #{type}s: #{name}" if name.to_s.end_with? 's'
+
+      return _patch_single(type, "merge", *args)
     end
     super
   end
 
   def respond_to_missing?(method_name, include_private = false)
-    return true if /^(?:get|patch|delete|create)_/ =~ method_name.to_s
+    return true if /^(?:get|patch|delete|create|update|merge_patch)_/ =~ method_name.to_s
 
     super
   end
