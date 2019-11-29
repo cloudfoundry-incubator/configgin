@@ -1,6 +1,7 @@
 require 'base64'
 require 'spec_helper'
 require 'configgin'
+require 'property_digest'
 
 describe Configgin do
   let(:options) {
@@ -28,8 +29,6 @@ describe Configgin do
     allow(File).to receive(:read).and_call_original
     allow(File).to receive(:read).with('/var/vcap/jobs-src/loggregator_agent/config_spec.json')
                                  .and_return(File.read(fixture('nats-loggregator-config-spec.json')))
-    # exported properties secret is only created for the main instance group container
-    stub_const('ENV', 'KUBERNETES_CONTAINER_NAME' => 'instance-group')
   }
 
   describe '#run' do
@@ -76,69 +75,50 @@ describe Configgin do
       end
     end
 
-    it 'patches affected statefulsets' do
-      subject.run
-      pod = client.get_pod('pod-0', 'the-namespace')
-      expect(pod).not_to be_nil
-      statefulset = client.get_stateful_set('debugger', pod.metadata.namespace)
-      expect(statefulset).not_to be_nil
-      secret = client.get_secret("#{pod.metadata.name}-#{pod.metadata.uid}", pod.metadata.namespace)
-      expect(secret).not_to be_nil
-
-      exported_key = 'skiff-exported-digest-loggregator_agent'
-      imported_key = 'skiff-in-props-instance-group-loggregator_agent'
-      expect(statefulset.spec.template.metadata.annotations[imported_key]).to eq Base64.decode64(secret.data[exported_key])
-    end
-  end
-
-  describe '#patch_job_metadata' do
-    let(:jobs) {
-      {
-        first: OpenStruct.new(
-          exported_properties: {
-            foo: 1,
-            bar: 2
-          }
-        ),
-        second: OpenStruct.new(
-          exported_properties: {
-            hash: {
-              nested: {
-                value: 3
-              }
-            },
-            array: [
-              {
-                hash_value: 4
-              }
-            ]
-          }
-        )
+    describe "#export_job_properties" do
+      before(:each) {
+        stub_const('ENV',
+                   # exported properties secret is only created for the main instance group container
+                   'KUBERNETES_CONTAINER_NAME' => 'instance-group',
+                   'CONFIGGIN_VERSION_TAG' => '1.2.3')
       }
-    }
+      it 'writes initial digest values to secret' do
+        # Tag does not exist in secret, so create both exported properties setting *and* initial
+        # digest values. Do *not* create any annotation on the statefulset.
+        subject.run
+        secret = client.get_secret('instance-group', 'the-namespace')
+        expect(secret).not_to be_nil
+        exported_properties = Base64.decode64(secret.data['skiff-exported-properties-loggregator_agent'])
+        initial_digest = Base64.decode64(secret.data['skiff-initial-digest-loggregator_agent'])
+        expect(initial_digest).to eq property_digest(JSON.parse(exported_properties))
 
-    it 'patches the jobs' do
-      subject.patch_job_metadata(jobs)
-      pod = client.get_pod('pod-0', 'the-namespace')
-      expect(pod).not_to be_nil
-      secret = client.get_secret("#{pod.metadata.name}-#{pod.metadata.uid}")
-      expect(secret).not_to be_nil
-
-      jobs.each do |name, job|
-        property_name = "skiff-exported-properties-#{name}"
-        expect(Base64.decode64(secret.data[property_name])).to eq job.exported_properties.to_json
-        digest_name = "skiff-exported-digest-#{name}"
-        expect(Base64.decode64(secret.data[digest_name])).to eq property_digest(job.exported_properties)
+        statefulset = client.get_stateful_set('debugger', 'the-namespace')
+        expect(statefulset).not_to be_nil
+        expect(statefulset.spec.template.metadata.annotations['skiff-in-props-instance-group-loggregator_agent']).to be_nil
       end
-    end
 
-    it 'returns the digests' do
-      results = subject.patch_job_metadata(jobs)
-      expect(results).to be_a Hash
-      expect(results).to include(
-        first: property_digest(jobs[:first].exported_properties),
-        second: property_digest(jobs[:second].exported_properties)
-      )
+      it 'patches the affected statefulset' do
+        # Create secret with tag value, so initial_digest should *not* be written to the secret,
+        # but affected statefulsets should be annotated with the expected digest value.
+        secret = Kubeclient::Resource.new
+        secret.metadata = {
+          name: 'instance-group',
+          namespace: 'the-namespace',
+        }
+        secret.data = { ENV['CONFIGGIN_VERSION_TAG'] => "" }
+        client.create_secret(secret)
+
+        subject.run
+        secret = client.get_secret('instance-group', 'the-namespace')
+        expect(secret).not_to be_nil
+        expect(secret.data['skiff-initial-digest-loggregator_agent']).to be_nil
+        exported_properties = Base64.decode64(secret.data['skiff-exported-properties-loggregator_agent'])
+
+        statefulset = client.get_stateful_set('debugger', 'the-namespace')
+        expect(statefulset).not_to be_nil
+        expected_digest = statefulset.spec.template.metadata.annotations['skiff-in-props-instance-group-loggregator_agent']
+        expect(expected_digest).to eq property_digest(JSON.parse(exported_properties))
+      end
     end
   end
 
@@ -161,25 +141,6 @@ describe Configgin do
       expect do
         subject.expected_annotations(job_configs, job_digests)
       end.not_to raise_error
-    end
-  end
-
-  describe '#restart_affected_pods' do
-    let(:expected_annotations) {
-      {
-        'debugger' => {
-          'key' => 'value'
-        }
-      }
-    }
-    it 'should patch the statefulset' do
-      stateful_set = client.get_stateful_set('debugger', 'the-namespace')
-      annotations = stateful_set.spec&.template&.metadata&.annotations
-      expect(annotations).to be_nil
-      subject.restart_affected_pods expected_annotations
-      stateful_set = client.get_stateful_set('debugger', 'the-namespace')
-      annotations = stateful_set.spec.template.metadata.annotations.to_h
-      expect(JSON.parse(annotations.to_json)).to include(expected_annotations['debugger'])
     end
   end
 end

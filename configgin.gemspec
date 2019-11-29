@@ -24,7 +24,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'bosh-template', '~> 2.0'
   spec.add_dependency 'deep_merge', '~> 1.1'
-  spec.add_dependency 'kubeclient', '~>2.0'
+  spec.add_dependency 'kubeclient', '~>4.3'
   spec.add_dependency 'mustache', '~> 1.0'
   spec.add_dependency 'rainbow', '~>2.0', '!=2.2.1'
 end
