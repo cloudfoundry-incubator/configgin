@@ -101,7 +101,7 @@ class Configgin
 
     # version tag changes whenever the chart version or the secrets generation changes
     version_tag = ENV["CONFIGGIN_VERSION_TAG"]
-    new_tag = !secret.data[version_tag]
+    new_tag = !secret.data.to_h.key?(version_tag.to_sym)
     secret.data = {version_tag => ""} if new_tag # make sure old properties are deleted during upgrade
 
     digests = {}
