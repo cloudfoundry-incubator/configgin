@@ -71,7 +71,8 @@ class Configgin
   def export_job_properties(jobs)
     # Co-located containers don't get to export properties.
     return unless instance_group == ENV["KUBERNETES_CONTAINER_NAME"]
-    # Jobs (errands) don't export properties.
+    # Jobs (errands) and unowned pods (tests) don't export properties.
+    return unless self_pod['metadata']['ownerReferences']
     return unless self_pod['metadata']['ownerReferences'][0]['kind'] == "StatefulSet"
 
     sts = kube_client_stateful_set.get_stateful_set(instance_group, kube_namespace)
