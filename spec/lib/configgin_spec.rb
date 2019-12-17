@@ -88,8 +88,8 @@ describe Configgin do
         subject.run
         secret = client.get_secret('instance-group', 'the-namespace')
         expect(secret).not_to be_nil
-        exported_properties = Base64.decode64(secret.data['skiff-exported-properties-loggregator_agent'])
-        initial_digest = Base64.decode64(secret.data['skiff-initial-digest-loggregator_agent'])
+        exported_properties = Base64.strict_decode64(secret.data['skiff-exported-properties-loggregator_agent'])
+        initial_digest = Base64.strict_decode64(secret.data['skiff-initial-digest-loggregator_agent'])
         expect(initial_digest).to eq property_digest(JSON.parse(exported_properties))
 
         statefulset = client.get_stateful_set('debugger', 'the-namespace')
@@ -112,7 +112,7 @@ describe Configgin do
         secret = client.get_secret('instance-group', 'the-namespace')
         expect(secret).not_to be_nil
         expect(secret.data['skiff-initial-digest-loggregator_agent']).to be_nil
-        exported_properties = Base64.decode64(secret.data['skiff-exported-properties-loggregator_agent'])
+        exported_properties = Base64.strict_decode64(secret.data['skiff-exported-properties-loggregator_agent'])
 
         statefulset = client.get_stateful_set('debugger', 'the-namespace')
         expect(statefulset).not_to be_nil
