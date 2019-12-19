@@ -81,7 +81,7 @@ class KubeLinkSpecs
     # tag in the corresponding secret.
     secret = client.get_secret(role_name, namespace)
     begin
-      JSON.parse(Base64.decode64(secret.data["skiff-exported-properties-#{job_name}"]))
+      JSON.parse(Base64.strict_decode64(secret.data["skiff-exported-properties-#{job_name}"]))
     rescue
       puts "Role #{role_name} is missing skiff-exported-properties-#{job_name}"
       fail
