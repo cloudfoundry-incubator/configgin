@@ -178,7 +178,7 @@ class Configgin
       base_config = JSON.parse(File.read(job_config['base']))
       base_config.fetch('consumed_by', {}).values.each do |consumer_jobs|
         consumer_jobs.each do |consumer_job|
-          digest_key = "skiff-in-props-#{instance_group}-#{job_name}"
+          digest_key = "skiff-#{ENV['CONFIGGIN_VERSION_TAG']}-#{instance_group}-#{job_name}"
           instance_groups_to_examine[consumer_job['role']][digest_key] = job_digests[job_name]
         end
       end

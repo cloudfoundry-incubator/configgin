@@ -94,7 +94,7 @@ describe Configgin do
 
         statefulset = client.get_stateful_set('debugger', 'the-namespace')
         expect(statefulset).not_to be_nil
-        expect(statefulset.spec.template.metadata.annotations['skiff-in-props-instance-group-loggregator_agent']).to be_nil
+        expect(statefulset.spec.template.metadata.annotations['skiff-1.2.3-instance-group-loggregator_agent']).to be_nil
       end
 
       it 'patches the affected statefulset' do
@@ -116,20 +116,23 @@ describe Configgin do
 
         statefulset = client.get_stateful_set('debugger', 'the-namespace')
         expect(statefulset).not_to be_nil
-        expected_digest = statefulset.spec.template.metadata.annotations['skiff-in-props-instance-group-loggregator_agent']
+        expected_digest = statefulset.spec.template.metadata.annotations['skiff-1.2.3-instance-group-loggregator_agent']
         expect(expected_digest).to eq property_digest(JSON.parse(exported_properties))
       end
     end
   end
 
   describe '#expected_annotations' do
+    before(:each) {
+      stub_const('ENV', 'CONFIGGIN_VERSION_TAG' => '1.2.3')
+    }
     let(:job_configs) { JSON.parse(File.read(fixture('nats-job-config.json'))) }
     let(:job_digests) { { 'loggregator_agent' => '123' } }
     it 'should return the correct expected annotations' do
       result = subject.expected_annotations(job_configs, job_digests)
       expect(result).to eq(
         'debugger' => {
-          'skiff-in-props-instance-group-loggregator_agent' => '123'
+          'skiff-1.2.3-instance-group-loggregator_agent' => '123'
         }
       )
     end
